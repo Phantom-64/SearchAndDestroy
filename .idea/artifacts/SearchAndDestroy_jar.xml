@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="SearchAndDestroy:jar">
+    <output-path>$USER_HOME$/Desktop/PhantomCraftMC/plugins</output-path>
+    <root id="archive" name="SearchAndDestroy.jar">
+      <element id="module-output" name="SearchAndDestroy" />
+      <element id="file-copy" path="$PROJECT_DIR$/src/plugin.yml" />
+    </root>
+  </artifact>
+</component>
