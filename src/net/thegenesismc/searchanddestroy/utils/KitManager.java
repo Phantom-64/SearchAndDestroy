@@ -7,6 +7,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -47,6 +48,9 @@ public class KitManager {
         inv.setLeggings(new ItemStack(Material.AIR));
         inv.setBoots(new ItemStack(Material.AIR));
         inv.clear();
+        for (PotionEffect effect : p.getActivePotionEffects()) {
+            p.removePotionEffect(effect.getType());
+        }
         if (kit==Kit.ASSAULT) {
             inv.setChestplate(new ItemStack(Material.IRON_CHESTPLATE, 1));
             inv.setLeggings(new ItemStack(Material.IRON_LEGGINGS, 1));
@@ -68,14 +72,14 @@ public class KitManager {
         } else if (kit==Kit.SPY) {
             ItemStack sword = new ItemStack(Material.GOLD_SWORD, 1);
             sword.addEnchantment(Enchantment.FIRE_ASPECT, 2);
-            sword.addEnchantment(Enchantment.DURABILITY, 10);
+            sword.addEnchantment(Enchantment.DURABILITY, 3);
             inv.addItem(sword);
             inv.addItem(new ItemStack(Material.ENDER_PEARL, 3));
             p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 999999999, 1));
         } else if (kit==Kit.SNIPER) {
             ItemStack bow = new ItemStack(Material.BOW, 1);
             bow.addEnchantment(Enchantment.ARROW_DAMAGE, 2);
-            bow.addEnchantment(Enchantment.ARROW_KNOCKBACK, 3);
+            bow.addEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
             bow.addEnchantment(Enchantment.ARROW_INFINITE, 1);
             inv.setChestplate(new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1));
             inv.setLeggings(new ItemStack(Material.CHAINMAIL_LEGGINGS, 1));
@@ -100,9 +104,13 @@ public class KitManager {
             ItemStack sword = new ItemStack(Material.STONE_SWORD, 1);
             sword.addEnchantment(Enchantment.DAMAGE_ALL, 1);
             ItemStack grenades = new ItemStack(Material.SNOW_BALL, 6);
-            grenades.getItemMeta().setDisplayName("Grenade");
+            ItemMeta grenademeta = grenades.getItemMeta();
+            grenademeta.setDisplayName("Grenade");
+            grenades.setItemMeta(grenademeta);
             ItemStack plates = new ItemStack(Material.STONE_PLATE, 2);
-            plates.getItemMeta().setDisplayName("Death plates");
+            ItemMeta platemeta = plates.getItemMeta();
+            platemeta.setDisplayName("Death plates");
+            plates.setItemMeta(platemeta);
             inv.setChestplate(new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1));
             inv.setLeggings(new ItemStack(Material.CHAINMAIL_LEGGINGS, 1));
             inv.setBoots(new ItemStack(Material.CHAINMAIL_BOOTS, 1));

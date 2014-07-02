@@ -3,3 +3,7 @@ main: net.thegenesismc.searchanddestroy.SND
 version: 1.0
 description: SND plugin.
 author: Phantom_64
+
+commands:
+   snd:
+     description: Main command for SND plugin.

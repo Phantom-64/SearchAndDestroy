@@ -1,13 +1,28 @@
 package net.thegenesismc.searchanddestroy;
 
+import net.thegenesismc.searchanddestroy.commands.CommandJoin;
+import net.thegenesismc.searchanddestroy.commands.CommandSetBombSpawn;
+import net.thegenesismc.searchanddestroy.commands.CommandSetSpawn;
+import net.thegenesismc.searchanddestroy.listeners.PlayerJoin;
 import net.thegenesismc.searchanddestroy.listeners.SignListener;
-import net.thegenesismc.searchanddestroy.utils.GameManager;
-import net.thegenesismc.searchanddestroy.utils.KitManager;
-import net.thegenesismc.searchanddestroy.utils.LocationHandler;
-import net.thegenesismc.searchanddestroy.utils.TeamManager;
+import net.thegenesismc.searchanddestroy.utils.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Snowball;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -76,19 +91,26 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class SND extends JavaPlugin implements Listener {
 
+    public static String TAG_GREEN = "§5[§3SearchAndDestroy§5] §a";
+    public static String TAG_BLUE = "§5[§3SearchAndDestroy§5] §9";
+    public static String TAG_RED = "§5[§3SearchAndDestroy§5] §c";
+
     public static LocationHandler lh;
     public static TeamManager tm;
     public static KitManager km;
     public static GameManager gm;
+    public static InventoryManager im;
 
     @Override
     public void onEnable() {
-        registerListeners(this, new SignListener());
+        registerListeners(this, new SignListener(), new PlayerJoin());
         lh = new LocationHandler(this);
         tm = new TeamManager(this);
         km = new KitManager(this);
         gm = new GameManager(this);
+        im = new InventoryManager(this);
         tm.setupTeams();
+        gm.setGameState(GameState.WAITING);
     }
 
     @Override
@@ -102,9 +124,97 @@ public class SND extends JavaPlugin implements Listener {
         }
     }
 
+    @Override
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (label.equalsIgnoreCase("snd")) {
+            if (sender instanceof Player) {
+                Player p = (Player) sender;
+                if (args.length==0) {
+                    p.sendMessage(SND.TAG_BLUE + "Avaliable arguments: setspawn, setbombspawn");
+                } else if (args[0].equalsIgnoreCase("setspawn")) {
+                    CommandSetSpawn.execute(p, args);
+                } else if (args[0].equalsIgnoreCase("setbombspawn")) {
+                    CommandSetBombSpawn.execute(p, args);
+                } else if (args[0].equalsIgnoreCase("join")) {
+                    CommandJoin.execute(p, args);
+                }
+            } else {
+                sender.sendMessage(ChatColor.RED + "Only players can use this command.");
+            }
+        }
+        return true;
+    }
+
     @EventHandler
     public void onExplode(EntityExplodeEvent e) {
         e.blockList().clear();
+    }
+
+    @EventHandler
+    public void onGrenade(ProjectileHitEvent e) {
+        if (e.getEntity() instanceof Snowball) {
+            final Snowball snowball = (Snowball) e.getEntity();
+            if (snowball.getShooter() instanceof Player) {
+                Player p = (Player) snowball.getShooter();
+                getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                    int num = 3;
+
+                    @Override
+                    public void run() {
+                        if (num != -1) {
+                            if (num != 0) {
+                                snowball.getWorld().playSound(snowball.getLocation(), Sound.CLICK, 1, 2);
+                                num--;
+                            } else {
+                                Entity tnt = snowball.getWorld().spawn(snowball.getLocation().add(0, 2, 0), TNTPrimed.class);
+                                ((TNTPrimed) tnt).setFuseTicks(0);
+                                num--;
+                            }
+                        }
+                    }
+                }, 0L, 20L);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onBlazeRod(EntityDamageByEntityEvent e) {
+        if (e.getDamager() instanceof Player) {
+            Player p = (Player) e.getDamager();
+            if (p.getItemInHand().getType()==Material.BLAZE_ROD) {
+                e.getEntity().setFireTicks(60);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onInteract(PlayerInteractEvent e) {
+        if (e.getAction()== Action.RIGHT_CLICK_BLOCK) {
+            SND.im.openMainMenu(e.getPlayer());
+        }
+    }
+
+    @EventHandler
+    public void onKitSelector(InventoryClickEvent e) {
+        if (e.getCurrentItem().getType()==Material.NETHER_STAR&&e.getCurrentItem().getItemMeta().getDisplayName().equals("§aKits")) {
+            e.setCancelled(true);
+            im.openKitSelector(((Player)e.getWhoClicked()));
+        }
+    }
+
+    @EventHandler
+    public void onKitSelect(InventoryClickEvent e) {
+        Player p = (Player) e.getWhoClicked();
+        String name = e.getCurrentItem().getItemMeta().getDisplayName();
+        if (name.equals("§bAssault Kit")) {
+            e.setCancelled(true);
+            p.closeInventory();
+            km.setKit(p, Kit.ASSAULT, Team.RED);
+        } else if (name.equals("§bJuggernaut Kit")) {
+            e.setCancelled(true);
+            p.closeInventory();
+            km.setKit(p, Kit.JUGGERNAUT, Team.RED);
+        }
     }
 
 }

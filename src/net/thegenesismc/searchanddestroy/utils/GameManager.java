@@ -1,6 +1,7 @@
 package net.thegenesismc.searchanddestroy.utils;
 
 import net.thegenesismc.searchanddestroy.SND;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
@@ -27,6 +28,16 @@ public class GameManager {
 
     private List<Player> playing = new ArrayList<Player>();
 
+    private GameState gameState;
+
+    public GameState getGameState() {
+        return gameState;
+    }
+
+    public void setGameState(GameState gameState) {
+        this.gameState = gameState;
+    }
+
     public List<Player> getPlaying() {
         return playing;
     }
@@ -41,6 +52,22 @@ public class GameManager {
         SND.km.setKit(p, kit, team);
         p.setGameMode(GameMode.ADVENTURE);
         SND.lh.teleportPlayerToGame(p, team);
+    }
+
+    public void removePlayerFromGame(Player p) {
+        getPlaying().remove(p);
+        SND.tm.removeFromTeam(p);
+        SND.km.clearInventory(p);
+        p.setGameMode(GameMode.SURVIVAL);
+        SND.lh.teleportPlayerFromGame(p);
+    }
+
+    public void broadcastMessageInGame(String message) {
+        for (Player pl : Bukkit.getOnlinePlayers()) {
+            if (isPlaying(pl)) {
+                pl.sendMessage(message);
+            }
+        }
     }
 
 }
