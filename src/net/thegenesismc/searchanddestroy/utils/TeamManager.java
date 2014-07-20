@@ -3,7 +3,6 @@ package net.thegenesismc.searchanddestroy.utils;
 import net.thegenesismc.searchanddestroy.SND;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 

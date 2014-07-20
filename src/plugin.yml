@@ -7,3 +7,5 @@ author: Phantom_64
 commands:
    snd:
      description: Main command for SND plugin.
+   p:
+     description: Get those potion effects outta here.

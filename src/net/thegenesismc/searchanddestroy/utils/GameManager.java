@@ -3,6 +3,9 @@ package net.thegenesismc.searchanddestroy.utils;
 import net.thegenesismc.searchanddestroy.SND;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -22,6 +25,44 @@ public class GameManager {
 
     private SND plugin;
 
+    private int minPlayersToStart = 5;
+
+    public int getMinPlayersToStart() {
+        return minPlayersToStart;
+    }
+
+    public void setMinPlayersToStart(int minPlayersToStart) {
+        this.minPlayersToStart = minPlayersToStart;
+    }
+
+    private int playerLimit;
+
+    public int getPlayerLimit() {
+        return plugin.getConfig().getInt("PlayerLimit");
+    }
+
+    public void setPlayerLimit(int playerLimit) {
+        plugin.getConfig().set("PlayerLimit", playerLimit);
+    }
+
+    private Location joinSignLocation;
+
+    public Location getJoinSignLocation() {
+        if (plugin.getConfig().contains("JoinSign.world")) {
+            return new Location(Bukkit.getWorld(plugin.getConfig().getString("JoinSign.world")),
+                    plugin.getConfig().getInt("JoinSign.x"), plugin.getConfig().getInt("JoinSign.y"), plugin.getConfig().getInt("JoinSign.z"));
+        }
+        return null;
+    }
+
+    public void setJoinSignLocation(Location joinSignLocation) {
+        plugin.getConfig().set("JoinSign.world", joinSignLocation.getWorld().getName());
+        plugin.getConfig().set("JoinSign.x", joinSignLocation.getBlockX());
+        plugin.getConfig().set("JoinSign.y", joinSignLocation.getBlockY());
+        plugin.getConfig().set("JoinSign.z", joinSignLocation.getBlockZ());
+        plugin.saveConfig();
+    }
+
     public GameManager(SND plugin) {
         this.plugin = plugin;
     }
@@ -36,6 +77,7 @@ public class GameManager {
 
     public void setGameState(GameState gameState) {
         this.gameState = gameState;
+
     }
 
     public List<Player> getPlaying() {
@@ -51,6 +93,17 @@ public class GameManager {
         SND.tm.setTeam(p, team);
         SND.km.setKit(p, kit, team);
         p.setGameMode(GameMode.ADVENTURE);
+        p.setHealth(20.0);
+        p.setFoodLevel(20);
+        SND.lh.teleportPlayerToGame(p, team);
+    }
+
+    public void addPlayerToGame(Player p, Team team) {
+        getPlaying().add(p);
+        SND.tm.setTeam(p, team);
+        p.setGameMode(GameMode.ADVENTURE);
+        p.setHealth(20.0);
+        p.setFoodLevel(20);
         SND.lh.teleportPlayerToGame(p, team);
     }
 
@@ -59,6 +112,8 @@ public class GameManager {
         SND.tm.removeFromTeam(p);
         SND.km.clearInventory(p);
         p.setGameMode(GameMode.SURVIVAL);
+        p.setHealth(20.0);
+        p.setFoodLevel(20);
         SND.lh.teleportPlayerFromGame(p);
     }
 
@@ -70,4 +125,39 @@ public class GameManager {
         }
     }
 
+    public void broadcastMessageInGame(Team team, String message) {
+        for (Player pl : Bukkit.getOnlinePlayers()) {
+            if (isPlaying(pl)) {
+                if (SND.tm.getTeam(pl)==team) {
+                    pl.sendMessage(message);
+                }
+            }
+        }
+    }
+
+    public void updateJoinSign() {
+        Block b = SND.gm.getJoinSignLocation().getBlock();
+        if (b.getState() instanceof Sign) {
+            Sign s = (Sign) b.getState();
+            if (SND.gm.getGameState()==GameState.LOBBY) {
+                s.setLine(0, "§9[Join]");
+                s.setLine(1, "§aSND");
+                s.setLine(2, "§5§l● Lobby ●");
+                s.setLine(3, "§a" + getPlaying().size() + "/" + getPlayerLimit());
+                s.update();
+            } else if (SND.gm.getGameState()==GameState.INGAME) {
+                s.setLine(0, "§9[Join]");
+                s.setLine(1, "§aSND");
+                s.setLine(2, "§8● In Game ●");
+                s.setLine(3, "§a" + getPlaying().size() + "/" + getPlayerLimit());
+                s.update();
+            } else if (SND.gm.getGameState()==GameState.RESTARTING) {
+                s.setLine(0, "§9[Join]");
+                s.setLine(1, "§aSND");
+                s.setLine(2, "§4§l● Restarting ●");
+                s.setLine(3, "§a" + getPlaying().size() + "/" + getPlayerLimit());
+                s.update();
+            }
+        }
+    }
 }

@@ -1,29 +1,24 @@
 package net.thegenesismc.searchanddestroy;
 
-import net.thegenesismc.searchanddestroy.commands.CommandJoin;
+import net.thegenesismc.searchanddestroy.commands.CommandLeave;
 import net.thegenesismc.searchanddestroy.commands.CommandSetBombSpawn;
 import net.thegenesismc.searchanddestroy.commands.CommandSetSpawn;
-import net.thegenesismc.searchanddestroy.listeners.PlayerJoin;
-import net.thegenesismc.searchanddestroy.listeners.SignListener;
+import net.thegenesismc.searchanddestroy.listeners.*;
 import net.thegenesismc.searchanddestroy.utils.*;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Snowball;
-import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
 
 /**
  * -----{ Search And Destroy }-----
@@ -103,14 +98,15 @@ public class SND extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        registerListeners(this, new SignListener(), new PlayerJoin());
+        registerListeners(this, new SignListener(), new PlayerJoin(), new InventoryListener(), new BlockListener(),
+                new FoodLevelListener());
         lh = new LocationHandler(this);
         tm = new TeamManager(this);
         km = new KitManager(this);
         gm = new GameManager(this);
         im = new InventoryManager(this);
         tm.setupTeams();
-        gm.setGameState(GameState.WAITING);
+        gm.setGameState(GameState.LOBBY);
     }
 
     @Override
@@ -130,16 +126,21 @@ public class SND extends JavaPlugin implements Listener {
             if (sender instanceof Player) {
                 Player p = (Player) sender;
                 if (args.length==0) {
-                    p.sendMessage(SND.TAG_BLUE + "Avaliable arguments: setspawn, setbombspawn");
+                    p.sendMessage(SND.TAG_BLUE + "Available arguments: setspawn, setbombspawn");
                 } else if (args[0].equalsIgnoreCase("setspawn")) {
                     CommandSetSpawn.execute(p, args);
                 } else if (args[0].equalsIgnoreCase("setbombspawn")) {
                     CommandSetBombSpawn.execute(p, args);
-                } else if (args[0].equalsIgnoreCase("join")) {
-                    CommandJoin.execute(p, args);
+                } else if (args[0].equalsIgnoreCase("leave")) {
+                    CommandLeave.execute(p, args);
                 }
             } else {
                 sender.sendMessage(ChatColor.RED + "Only players can use this command.");
+            }
+        } else if (label.equalsIgnoreCase("p")) {
+            Player p = (Player) sender;
+            for (PotionEffect effect : p.getActivePotionEffects()) {
+                p.removePotionEffect(effect.getType());
             }
         }
         return true;
@@ -158,7 +159,6 @@ public class SND extends JavaPlugin implements Listener {
                 Player p = (Player) snowball.getShooter();
                 getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                     int num = 3;
-
                     @Override
                     public void run() {
                         if (num != -1) {
@@ -167,7 +167,7 @@ public class SND extends JavaPlugin implements Listener {
                                 num--;
                             } else {
                                 Entity tnt = snowball.getWorld().spawn(snowball.getLocation().add(0, 2, 0), TNTPrimed.class);
-                                ((TNTPrimed) tnt).setFuseTicks(0);
+                                ((TNTPrimed)tnt).setFuseTicks(0);
                                 num--;
                             }
                         }
@@ -188,32 +188,10 @@ public class SND extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onInteract(PlayerInteractEvent e) {
-        if (e.getAction()== Action.RIGHT_CLICK_BLOCK) {
-            SND.im.openMainMenu(e.getPlayer());
-        }
-    }
-
-    @EventHandler
-    public void onKitSelector(InventoryClickEvent e) {
-        if (e.getCurrentItem().getType()==Material.NETHER_STAR&&e.getCurrentItem().getItemMeta().getDisplayName().equals("§aKits")) {
-            e.setCancelled(true);
-            im.openKitSelector(((Player)e.getWhoClicked()));
-        }
-    }
-
-    @EventHandler
-    public void onKitSelect(InventoryClickEvent e) {
-        Player p = (Player) e.getWhoClicked();
-        String name = e.getCurrentItem().getItemMeta().getDisplayName();
-        if (name.equals("§bAssault Kit")) {
-            e.setCancelled(true);
-            p.closeInventory();
-            km.setKit(p, Kit.ASSAULT, Team.RED);
-        } else if (name.equals("§bJuggernaut Kit")) {
-            e.setCancelled(true);
-            p.closeInventory();
-            km.setKit(p, Kit.JUGGERNAUT, Team.RED);
+    public void onDefuse(PlayerInteractEntityEvent e) {
+        if (e.getRightClicked().getType()==EntityType.PRIMED_TNT) {
+            e.getRightClicked().getLocation().getBlock().setType(Material.TNT);
+            e.getRightClicked().remove();
         }
     }
 
