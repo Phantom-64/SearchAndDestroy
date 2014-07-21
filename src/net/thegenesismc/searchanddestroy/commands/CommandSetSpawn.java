@@ -13,7 +13,7 @@ public class CommandSetSpawn {
         }
 
         if (a.length!=2) {
-            p.sendMessage(SND.TAG_BLUE + "Usage: /snd setspawn <red/blue/exit>");
+            p.sendMessage(SND.TAG_BLUE + "Usage: /snd setspawn <red/blue/exit/lobby/spectator>");
         } else {
             if (a[1].equalsIgnoreCase("red")) {
                 SND.lh.setRedSpawn(p.getLocation());
@@ -24,8 +24,14 @@ public class CommandSetSpawn {
             } else if (a[1].equalsIgnoreCase("exit")) {
                 SND.lh.setExitSpawn(p.getLocation());
                 p.sendMessage(SND.TAG_GREEN + "Exit spawn set!");
+            } else if (a[1].equalsIgnoreCase("lobby")) {
+                SND.lh.setLobbySpawn(p.getLocation());
+                p.sendMessage(SND.TAG_GREEN + "Lobby spawn set!");
+            } else if (a[1].equalsIgnoreCase("spectator")) {
+                SND.lh.setSpectatorSpawn(p.getLocation());
+                p.sendMessage(SND.TAG_GREEN + "Spectator spawn set!");
             } else {
-                p.sendMessage(SND.TAG_BLUE + "Invalid spawn type. Available spawn types: red, blue");
+                p.sendMessage(SND.TAG_BLUE + "Invalid spawn type. Available spawn types: red, blue, exit, lobby, spectator");
             }
         }
 

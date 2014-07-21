@@ -5,20 +5,25 @@ import net.thegenesismc.searchanddestroy.commands.CommandSetBombSpawn;
 import net.thegenesismc.searchanddestroy.commands.CommandSetSpawn;
 import net.thegenesismc.searchanddestroy.listeners.*;
 import net.thegenesismc.searchanddestroy.utils.*;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Snowball;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.PotionEffect;
 
 /**
  * -----{ Search And Destroy }-----
@@ -84,29 +89,45 @@ import org.bukkit.potion.PotionEffect;
  The plugin has to be done by the 14th July!
  */
 
+
+/**
+ * TO-DO
+ * - Fuse and defuse logic
+ * - Spectator shiz
+ *   - Let people join when game state is in game and set them to spectator
+ *   - Block all interactions with the environment
+ */
 public class SND extends JavaPlugin implements Listener {
 
     public static String TAG_GREEN = "§5[§3SearchAndDestroy§5] §a";
     public static String TAG_BLUE = "§5[§3SearchAndDestroy§5] §9";
     public static String TAG_RED = "§5[§3SearchAndDestroy§5] §c";
 
+    //Too many managers :O
     public static LocationHandler lh;
     public static TeamManager tm;
     public static KitManager km;
     public static GameManager gm;
     public static InventoryManager im;
+    public static LobbyManager lm;
+    public static SpectatorManager sm;
 
     @Override
     public void onEnable() {
+        this.getConfig().options().copyDefaults(true);
+        this.saveConfig();
         registerListeners(this, new SignListener(), new PlayerJoin(), new InventoryListener(), new BlockListener(),
-                new FoodLevelListener());
+                new FoodLevelListener(), new PlayerDeath());
         lh = new LocationHandler(this);
         tm = new TeamManager(this);
         km = new KitManager(this);
         gm = new GameManager(this);
         im = new InventoryManager(this);
+        lm = new LobbyManager(this);
+        sm = new SpectatorManager(this);
         tm.setupTeams();
         gm.setGameState(GameState.LOBBY);
+        SND.gm.updateJoinSign();
     }
 
     @Override
@@ -117,7 +138,9 @@ public class SND extends JavaPlugin implements Listener {
     private void registerListeners(Listener... listeners) {
         for (Listener listener : listeners) {
             getServer().getPluginManager().registerEvents(listener, this);
+            getLogger().info(listener.getClass().getSimpleName() + " registered.");
         }
+        getLogger().info("All events registered.");
     }
 
     @Override
@@ -139,16 +162,78 @@ public class SND extends JavaPlugin implements Listener {
             }
         } else if (label.equalsIgnoreCase("p")) {
             Player p = (Player) sender;
-            for (PotionEffect effect : p.getActivePotionEffects()) {
-                p.removePotionEffect(effect.getType());
-            }
+            p.teleport(p.getLocation().add(0, 150, 0));
         }
         return true;
     }
 
     @EventHandler
-    public void onExplode(EntityExplodeEvent e) {
-        e.blockList().clear();
+    public void onSignClick(PlayerInteractEvent e) {
+        final Player p = e.getPlayer();
+        if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            Block b = e.getClickedBlock();
+            if (b.getType() == Material.SIGN_POST || b.getType() == Material.WALL_SIGN) {
+                Sign s = (Sign) b.getState();
+                if (s.getLine(0).equalsIgnoreCase("§9[Join]") && s.getLine(1).equalsIgnoreCase("§aSND")) {
+                    if (SND.gm.getGameState()==GameState.LOBBY) {
+                        if (SND.lm.getLobby().size()>=SND.gm.getPlayerLimit()) {
+                            p.sendMessage(SND.TAG_RED + "This game is full.");
+                        } else if (SND.lm.getLobby().size()<SND.gm.getPlayerLimit()) {
+                            SND.lm.addPlayerToLobby(p);
+                            SND.gm.updateJoinSign();
+                            SND.lm.broadcastMessageInLobby(SND.TAG_GREEN + p.getName() + " joined the lobby. §2(§a" + SND.lm.getLobby().size() + "§2/§a" + SND.gm.getPlayerLimit() + "§2)");
+                            if (SND.lm.getLobby().size()>=SND.lm.getMinPlayersToStart()) {
+                                getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                                    int num = 15;
+                                    @Override
+                                    public void run() {
+                                        if (num!=-1) {
+                                            if (num!=0) {
+                                                for (Player pl : SND.lm.getLobby()) {
+                                                    pl.setExp(0);
+                                                    pl.setLevel(num);
+                                                    pl.getWorld().playSound(p.getLocation(), Sound.CLICK, 1, 1);
+                                                }
+                                                num--;
+                                            } else {
+                                                for (Player pl : Bukkit.getOnlinePlayers()) {
+                                                    if (SND.lm.getLobby().contains(pl)) {
+                                                        pl.setExp(0);
+                                                        pl.setLevel(0);
+                                                        pl.getWorld().playSound(pl.getLocation(), Sound.BURP, 1, 1);
+                                                        Team team = SND.tm.getValidTeam();
+                                                        SND.lm.removePlayerFromLobby(pl);
+                                                        SND.gm.addPlayerToGame(pl, team);
+                                                        SND.im.openKitSelector(pl);
+                                                    }
+                                                }
+                                                SND.gm.setGameState(GameState.INGAME);
+                                                SND.gm.updateJoinSign();
+                                                num--;
+                                            }
+                                        }
+                                    }
+                                }, 0L, 20L);
+                            }
+                        }
+                    } else if (SND.gm.getGameState()==GameState.INGAME) {
+                        if (SND.gm.getPlaying().size()<SND.gm.getPlayerLimit()) {
+                            if (!SND.gm.isPlaying(p)) {
+                                SND.gm.removePlayerFromGame(p);
+                                SND.sm.setSpectator(p);
+                                SND.gm.broadcastMessageInGame(SND.TAG_GREEN + p.getName() + " is spectating the game.", true);
+                            } else {
+                                p.sendMessage(SND.TAG_BLUE + "You are already in the game.");
+                            }
+                        } else {
+                            p.sendMessage(SND.TAG_RED + "This game is full.");
+                        }
+                    } else {
+                        p.sendMessage(SND.TAG_RED + "This game is not joinable right now.");
+                    }
+                }
+            }
+        }
     }
 
     @EventHandler
@@ -157,42 +242,39 @@ public class SND extends JavaPlugin implements Listener {
             final Snowball snowball = (Snowball) e.getEntity();
             if (snowball.getShooter() instanceof Player) {
                 Player p = (Player) snowball.getShooter();
-                getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-                    int num = 3;
-                    @Override
-                    public void run() {
-                        if (num != -1) {
-                            if (num != 0) {
-                                snowball.getWorld().playSound(snowball.getLocation(), Sound.CLICK, 1, 2);
-                                num--;
-                            } else {
-                                Entity tnt = snowball.getWorld().spawn(snowball.getLocation().add(0, 2, 0), TNTPrimed.class);
-                                ((TNTPrimed)tnt).setFuseTicks(0);
-                                num--;
+                if (SND.gm.isPlaying(p)) {
+                    getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                        int num = 3;
+
+                        @Override
+                        public void run() {
+                            if (num != -1) {
+                                if (num != 0) {
+                                    snowball.getWorld().playSound(snowball.getLocation(), Sound.CLICK, 1, 2);
+                                    num--;
+                                } else {
+                                    Entity tnt = snowball.getWorld().spawn(snowball.getLocation().add(0, 2, 0), TNTPrimed.class);
+                                    ((TNTPrimed) tnt).setFuseTicks(0);
+                                    num--;
+                                }
                             }
                         }
-                    }
-                }, 0L, 20L);
+                    }, 0L, 20L);
+                }
             }
         }
     }
 
     @EventHandler
-    public void onBlazeRod(EntityDamageByEntityEvent e) {
-        if (e.getDamager() instanceof Player) {
-            Player p = (Player) e.getDamager();
-            if (p.getItemInHand().getType()==Material.BLAZE_ROD) {
-                e.getEntity().setFireTicks(60);
-            }
-        }
+    public void onEntityExplode(EntityExplodeEvent e) {
+        e.blockList().clear();
     }
 
     @EventHandler
-    public void onDefuse(PlayerInteractEntityEvent e) {
-        if (e.getRightClicked().getType()==EntityType.PRIMED_TNT) {
-            e.getRightClicked().getLocation().getBlock().setType(Material.TNT);
-            e.getRightClicked().remove();
+    public void onInteract(PlayerInteractEvent e) {
+        Player p = e.getPlayer();
+        if (SND.sm.isSpectator(p)) {
+            e.setCancelled(true);
         }
     }
-
 }

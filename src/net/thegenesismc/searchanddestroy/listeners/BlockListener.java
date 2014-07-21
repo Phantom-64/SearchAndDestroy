@@ -10,14 +10,14 @@ public class BlockListener implements Listener {
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e) {
-        if (SND.gm.isPlaying(e.getPlayer())) {
+        if (SND.gm.isPlaying(e.getPlayer())||SND.lm.isInLobby(e.getPlayer())||SND.sm.isSpectator(e.getPlayer())) {
             e.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent e) {
-        if (SND.gm.isPlaying(e.getPlayer())) {
+        if (SND.gm.isPlaying(e.getPlayer())||SND.lm.isInLobby(e.getPlayer())||SND.sm.isSpectator(e.getPlayer())) {
             e.setCancelled(true);
         }
     }

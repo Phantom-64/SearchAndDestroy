@@ -2,7 +2,6 @@ package net.thegenesismc.searchanddestroy.listeners;
 
 import net.thegenesismc.searchanddestroy.SND;
 import net.thegenesismc.searchanddestroy.utils.Kit;
-import net.thegenesismc.searchanddestroy.utils.Team;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,13 +14,21 @@ public class InventoryListener implements Listener {
     @EventHandler
     public void onTeamSelect(InventoryClickEvent e) {
         if (e.getWhoClicked() instanceof Player) {
-            Player p = (Player) e.getWhoClicked();
-            ItemStack kit = e.getCurrentItem();
-            if (kit.getItemMeta().getDisplayName().equals("§bAssault Kit")&&kit.getType()==Material.IRON_SWORD) {
-                Team team = SND.tm.getValidTeam();
-                SND.gm.addPlayerToGame(p, team, Kit.ASSAULT);
-                SND.gm.broadcastMessageInGame(SND.TAG_GREEN + SND.tm.getPlayerNameInTeamColor(p) + " §ajoined the lobby. " + SND.gm.getPlaying().size() + "/" + SND.gm.getPlayerLimit());
-            }
+            try {
+                Player p = (Player) e.getWhoClicked();
+                ItemStack kit = e.getCurrentItem();
+                String name = kit.getItemMeta().getDisplayName();
+                Material m = kit.getType();
+                if (name.equals("§bAssault Kit")&&m==Material.IRON_SWORD) {
+                    e.setCancelled(true);
+                    p.closeInventory();
+                    SND.km.setKit(p, Kit.ASSAULT, SND.tm.getTeam(p));
+                } else if (name.equals("§bJuggernaut Kit")&&m==Material.STONE_SWORD) {
+                    e.setCancelled(true);
+                    p.closeInventory();
+                    SND.km.setKit(p, Kit.JUGGERNAUT, SND.tm.getTeam(p));
+                }
+            } catch (NullPointerException npe) {}
         }
     }
 }

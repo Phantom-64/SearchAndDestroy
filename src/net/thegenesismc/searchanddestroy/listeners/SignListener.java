@@ -2,15 +2,10 @@ package net.thegenesismc.searchanddestroy.listeners;
 
 import net.thegenesismc.searchanddestroy.SND;
 import net.thegenesismc.searchanddestroy.utils.GameState;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 
 /**
  * When game is waiting to start:
@@ -59,28 +54,6 @@ public class SignListener implements Listener {
                     e.setLine(3, "§a" + SND.gm.getPlaying().size() + "/" + SND.gm.getPlayerLimit());
                 }
                 p.sendMessage(SND.TAG_GREEN + "Join sign created!");
-            }
-        }
-    }
-
-    @EventHandler
-    public void onSignClick(PlayerInteractEvent e) {
-        final Player p = e.getPlayer();
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            Block b = e.getClickedBlock();
-            if (b.getType() == Material.SIGN_POST || b.getType() == Material.WALL_SIGN) {
-                Sign s = (Sign) b.getState();
-                if (s.getLine(0).equalsIgnoreCase("§9[Join]") && s.getLine(1).equalsIgnoreCase("§aSND")) {
-                    if (!SND.gm.isPlaying(p)) {
-                        if (SND.gm.getPlaying().size() >= 24) {
-                            p.sendMessage(SND.TAG_RED + "This game is full.");
-                        } else if (SND.gm.getPlaying().size() < 24) {
-                            SND.im.openKitSelector(p);
-                        }
-                    } else {
-                        p.sendMessage(SND.TAG_BLUE + "You are already in the game.");
-                    }
-                }
             }
         }
     }

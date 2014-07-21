@@ -11,7 +11,7 @@ public class FoodLevelListener implements Listener {
     @EventHandler
     public void onFoodLevelChange(FoodLevelChangeEvent e) {
         if (e.getEntity() instanceof Player) {
-            if (SND.gm.isPlaying((Player)e.getEntity())) {
+            if (SND.gm.isPlaying((Player)e.getEntity())||SND.lm.isInLobby((Player)e.getEntity())||SND.sm.isSpectator((Player)e.getEntity())) {
                 e.setCancelled(true);
             }
         }
