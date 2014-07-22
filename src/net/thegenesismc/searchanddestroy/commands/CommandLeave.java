@@ -30,6 +30,10 @@ public class CommandLeave {
                 SND.gm.broadcastMessageInGame(SND.TAG_RED + p.getName() + " stopped spectating.", true);
                 SND.sm.removeSpectator(p);
                 p.teleport(SND.lh.getExitSpawn());
+                if (SND.gm.getPlaying().size()==0) {
+                    SND.gm.setGameState(GameState.LOBBY);
+                }
+                SND.gm.updateJoinSign();
             } else {
                 p.sendMessage(SND.TAG_BLUE + "You are not in a game!");
             }

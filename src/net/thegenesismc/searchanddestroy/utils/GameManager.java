@@ -4,9 +4,11 @@ import net.thegenesismc.searchanddestroy.SND;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -166,5 +168,27 @@ public class GameManager {
                 s.update();
             }
         }
+    }
+
+    public void endGame() {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (SND.gm.isPlaying(p)) {
+                SND.gm.removePlayerFromGame(p);
+                p.teleport(SND.lh.getExitSpawn());
+            } else if (SND.lm.isInLobby(p)) {
+                SND.lm.removePlayerFromLobby(p);
+                p.teleport(SND.lh.getExitSpawn());
+            } else if (SND.sm.isSpectator(p)) {
+                SND.sm.removeSpectator(p);
+                p.teleport(SND.lh.getExitSpawn());
+            }
+            for (PotionEffect effect : p.getActivePotionEffects()) {
+                p.removePotionEffect(effect.getType());
+            }
+        }
+        SND.lh.getRedBombSpawn().getBlock().setType(Material.AIR);
+        SND.lh.getBlueBombSpawn().getBlock().setType(Material.AIR);
+        SND.gm.setGameState(GameState.LOBBY);
+        SND.gm.updateJoinSign();
     }
 }

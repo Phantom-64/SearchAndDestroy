@@ -5,25 +5,25 @@ import net.thegenesismc.searchanddestroy.commands.CommandSetBombSpawn;
 import net.thegenesismc.searchanddestroy.commands.CommandSetSpawn;
 import net.thegenesismc.searchanddestroy.listeners.*;
 import net.thegenesismc.searchanddestroy.utils.*;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Snowball;
-import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+
+import java.util.Random;
 
 /**
  * -----{ Search And Destroy }-----
@@ -111,13 +111,14 @@ public class SND extends JavaPlugin implements Listener {
     public static InventoryManager im;
     public static LobbyManager lm;
     public static SpectatorManager sm;
+    public static BombManager bm;
 
     @Override
     public void onEnable() {
         this.getConfig().options().copyDefaults(true);
         this.saveConfig();
         registerListeners(this, new SignListener(), new PlayerJoin(), new InventoryListener(), new BlockListener(),
-                new FoodLevelListener(), new PlayerDeath());
+                new FoodLevelListener(), new NoDropListener());
         lh = new LocationHandler(this);
         tm = new TeamManager(this);
         km = new KitManager(this);
@@ -125,6 +126,7 @@ public class SND extends JavaPlugin implements Listener {
         im = new InventoryManager(this);
         lm = new LobbyManager(this);
         sm = new SpectatorManager(this);
+        bm = new BombManager(this);
         tm.setupTeams();
         gm.setGameState(GameState.LOBBY);
         SND.gm.updateJoinSign();
@@ -149,7 +151,7 @@ public class SND extends JavaPlugin implements Listener {
             if (sender instanceof Player) {
                 Player p = (Player) sender;
                 if (args.length==0) {
-                    p.sendMessage(SND.TAG_BLUE + "Available arguments: setspawn, setbombspawn");
+                    p.sendMessage(SND.TAG_BLUE + "Available arguments: leave, setspawn, setbombspawn");
                 } else if (args[0].equalsIgnoreCase("setspawn")) {
                     CommandSetSpawn.execute(p, args);
                 } else if (args[0].equalsIgnoreCase("setbombspawn")) {
@@ -184,7 +186,7 @@ public class SND extends JavaPlugin implements Listener {
                             SND.lm.broadcastMessageInLobby(SND.TAG_GREEN + p.getName() + " joined the lobby. §2(§a" + SND.lm.getLobby().size() + "§2/§a" + SND.gm.getPlayerLimit() + "§2)");
                             if (SND.lm.getLobby().size()>=SND.lm.getMinPlayersToStart()) {
                                 getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-                                    int num = 15;
+                                    int num = 3;
                                     @Override
                                     public void run() {
                                         if (num!=-1) {
@@ -207,6 +209,8 @@ public class SND extends JavaPlugin implements Listener {
                                                         SND.im.openKitSelector(pl);
                                                     }
                                                 }
+                                                SND.lh.getRedBombSpawn().getBlock().setType(Material.TNT);
+                                                SND.lh.getBlueBombSpawn().getBlock().setType(Material.TNT);
                                                 SND.gm.setGameState(GameState.INGAME);
                                                 SND.gm.updateJoinSign();
                                                 num--;
@@ -231,6 +235,20 @@ public class SND extends JavaPlugin implements Listener {
                     } else {
                         p.sendMessage(SND.TAG_RED + "This game is not joinable right now.");
                     }
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPressurePlate(PlayerInteractEvent e) {
+        Player p = e.getPlayer();
+        if (e.getAction()==Action.PHYSICAL) {
+            Block b = e.getClickedBlock();
+            if (b.getType()==Material.STONE_PLATE) {
+                if (SND.gm.isPlaying(p)) {
+                    p.setHealth(0.0);
+                    b.setType(Material.AIR);
                 }
             }
         }
@@ -276,5 +294,208 @@ public class SND extends JavaPlugin implements Listener {
         if (SND.sm.isSpectator(p)) {
             e.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent e) {
+        Player p = e.getEntity();
+        if (SND.gm.isPlaying(p)) {
+            e.getDrops().clear();
+            if (p.getKiller() instanceof Player) {
+                Player killer = p.getKiller();
+                SND.gm.broadcastMessageInGame(SND.TAG_BLUE + SND.tm.getPlayerNameInTeamColor(p) + " §9was killed by " + SND.tm.getPlayerNameInTeamColor(killer) + "§9.", true);
+            } else {
+                SND.gm.broadcastMessageInGame(SND.TAG_BLUE + SND.tm.getPlayerNameInTeamColor(p) + " §9died.", true);
+            }
+            e.setDeathMessage("");
+            p.getWorld().playSound(p.getLocation(), Sound.EXPLODE, 1, 1);
+            p.setHealth(20.0);
+            p.setFoodLevel(20);
+            for (PotionEffect effect : p.getActivePotionEffects()) {
+                p.removePotionEffect(effect.getType());
+            }
+            SND.gm.removePlayerFromGame(p);
+            SND.sm.setSpectator(p);
+            SND.gm.updateJoinSign();
+            if (SND.tm.getBlue().size()==0) {
+                SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "Everyone in §9blue team §ais dead!", true);
+                SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "§cRed team §awins!", true);
+                getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                    int num = 3;
+                    @Override
+                    public void run() {
+                        if (num!=-1) {
+                            if (num!=0) {
+                                shootFirework(SND.lh.getRedSpawn());
+                                num--;
+                            } else {
+                                SND.gm.endGame();
+                                num--;
+                            }
+                        }
+                    }
+                }, 0L, 30L);
+            } else if (SND.tm.getRed().size()==0) {
+                SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "Everyone in §cred team §ais dead!", true);
+                SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "§9Blue team §awins!", true);
+                getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                    int num = 3;
+                    @Override
+                    public void run() {
+                        if (num!=-1) {
+                            if (num!=0) {
+                                shootFirework(SND.lh.getRedSpawn());
+                                num--;
+                            } else {
+                                SND.gm.endGame();
+                                num--;
+                            }
+                        }
+                    }
+                }, 0L, 30L);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onBombFuse(PlayerInteractEvent e) {
+        Player p = e.getPlayer();
+        if (e.getAction()==Action.RIGHT_CLICK_BLOCK) {
+            Block b = e.getClickedBlock();
+            if (b.getType()==Material.TNT&&e.getItem().getType()==Material.BLAZE_POWDER) {
+                if (SND.tm.getTeam(p)==Team.RED&&b.getLocation()==SND.lh.getBlueBombSpawn()) {
+                    for (Player pl : Bukkit.getOnlinePlayers()) {
+                        if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                            pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
+                        }
+                    }
+                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has been lit! They have 30 seconds to defuse it before it blows up!", true);
+                    SND.bm.setBlueFused(true);
+                    getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                        @Override
+                        public void run() {
+                            if (SND.bm.isBlueFused()) {
+                                SND.bm.setBlueFused(false);
+                                Block b = SND.lh.getBlueBombSpawn().getBlock();
+                                b.getWorld().playSound(b.getLocation(), Sound.EXPLODE, 1, 1);
+                                SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has blown up! §cRed team §9wins!", true);
+                                for (int i=1;i<4;i++) {
+                                    shootFirework(SND.lh.getRedSpawn());
+                                }
+                                SND.gm.endGame();
+                            }
+                        }
+                    }, 30 * 20);
+                } else if (SND.tm.getTeam(p)==Team.BLUE&&b.getLocation()==SND.lh.getRedBombSpawn()) {
+                    for (Player pl : Bukkit.getOnlinePlayers()) {
+                        if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                            pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
+                        }
+                    }
+                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has been lit! They have 30 seconds to defuse it before it blows up!", true);
+                    SND.bm.setRedFused(true);
+                    getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                        @Override
+                        public void run() {
+                            if (SND.bm.isRedFused()) {
+                                SND.bm.setRedFused(false);
+                                Block b = SND.lh.getRedBombSpawn().getBlock();
+                                b.getWorld().playSound(b.getLocation(), Sound.EXPLODE, 1, 1);
+                                SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has blown up! Blue team wins!", true);
+                                for (int i=1;i<4;i++) {
+                                    shootFirework(SND.lh.getBlueSpawn());
+                                }
+                                SND.gm.endGame();
+                            }
+                        }
+                    }, 30 * 20);
+                } else if (SND.tm.getTeam(p)==Team.RED&&b.getLocation()==SND.lh.getRedBombSpawn()) {
+                    if (SND.bm.isRedFused()) {
+                        SND.bm.setRedFused(false);
+                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team §9defused their bomb in time!", true);
+                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team §9wins!", true);
+                        getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                            int num = 3;
+                            @Override
+                            public void run() {
+                                if (num!=-1) {
+                                    if (num!=0) {
+                                        shootFirework(SND.lh.getRedSpawn());
+                                        num--;
+                                    } else {
+                                        SND.gm.endGame();
+                                        num--;
+                                    }
+                                }
+                            }
+                        }, 0L, 30L);
+                    } else {
+                        p.sendMessage(SND.TAG_BLUE + "Your bomb isn't fused yet.");
+                    }
+                } else if (SND.tm.getTeam(p)==Team.BLUE&&b.getLocation()==SND.lh.getBlueBombSpawn()) {
+                    if (SND.bm.isBlueFused()) {
+                        SND.bm.setBlueFused(false);
+                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team defused their bomb in time!", true);
+                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team wins!", true);
+                        getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                            int num = 3;
+                            @Override
+                            public void run() {
+                                if (num!=-1) {
+                                    if (num!=0) {
+                                        shootFirework(SND.lh.getBlueSpawn());
+                                        num--;
+                                    } else {
+                                        SND.gm.endGame();
+                                        num--;
+                                    }
+                                }
+                            }
+                        }, 0L, 30L);
+                    } else {
+                        p.sendMessage(SND.TAG_BLUE + "Your bomb isn't fused yet.");
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPVP(EntityDamageByEntityEvent e) {
+        if (e.getEntity() instanceof Player) {
+            Player p = (Player) e.getEntity();
+            if (e.getDamager() instanceof Player) {
+                Player damager = (Player) e.getDamager();
+                if (SND.lm.isInLobby(p)&&SND.lm.isInLobby(damager)) {
+                    e.setCancelled(true);
+                } else if (SND.sm.isSpectator(damager)&&SND.gm.isPlaying(p)) {
+                    e.setCancelled(true);
+                }
+            }
+        }
+    }
+
+    private void shootFirework(Location loc) {
+        Firework fw = (Firework) loc.getWorld().spawnEntity(loc, EntityType.FIREWORK);
+        FireworkMeta fwm = fw.getFireworkMeta();
+
+        Random r = new Random();
+
+        int rt = r.nextInt(5) + 1;
+        FireworkEffect.Type type = FireworkEffect.Type.BALL;
+        if (rt == 1) type = FireworkEffect.Type.BALL;
+        if (rt == 2) type = FireworkEffect.Type.BALL_LARGE;
+        if (rt == 3) type = FireworkEffect.Type.BURST;
+        if (rt == 4) type = FireworkEffect.Type.CREEPER;
+        if (rt == 5) type = FireworkEffect.Type.STAR;
+
+        Color c1 = Color.AQUA;
+        Color c2 = Color.LIME;
+
+        FireworkEffect effect = FireworkEffect.builder().flicker(r.nextBoolean()).withColor(c1).withFade(c2).with(type).trail(r.nextBoolean()).build();
+
+        fwm.addEffect(effect);
+        fwm.setPower(1);
+        fw.setFireworkMeta(fwm);
     }
 }

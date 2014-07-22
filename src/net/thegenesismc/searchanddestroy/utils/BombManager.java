@@ -10,7 +10,22 @@ public class BombManager {
         this.plugin = plugin;
     }
 
-    public void fuse(Team team) {
+    private boolean isRedFused;
+    private boolean isBlueFused;
 
+    public boolean isRedFused() {
+        return isRedFused;
+    }
+
+    public void setRedFused(boolean isRedFused) {
+        this.isRedFused = isRedFused;
+    }
+
+    public boolean isBlueFused() {
+        return isBlueFused;
+    }
+
+    public void setBlueFused(boolean isBlueFused) {
+        this.isBlueFused = isBlueFused;
     }
 }

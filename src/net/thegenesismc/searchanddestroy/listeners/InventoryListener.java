@@ -9,6 +9,16 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+/**
+ * ASSAULT,
+ JUGGERNAUT,
+ SPY,
+ SNIPER,
+ SCOUT,
+ EXPLOSIVE,
+ WIZARD;
+ */
+
 public class InventoryListener implements Listener {
 
     @EventHandler
@@ -27,6 +37,26 @@ public class InventoryListener implements Listener {
                     e.setCancelled(true);
                     p.closeInventory();
                     SND.km.setKit(p, Kit.JUGGERNAUT, SND.tm.getTeam(p));
+                } else if (name.equals("§bSpy Kit")&&m==Material.ENDER_PEARL) {
+                    e.setCancelled(true);
+                    p.closeInventory();
+                    SND.km.setKit(p, Kit.SPY, SND.tm.getTeam(p));
+                } else if (name.equals("§bSniper Kit")&&m==Material.BOW) {
+                    e.setCancelled(true);
+                    p.closeInventory();
+                    SND.km.setKit(p, Kit.SNIPER, SND.tm.getTeam(p));
+                } else if (name.equals("§bScout Kit")&&m==Material.DIAMOND_AXE) {
+                    e.setCancelled(true);
+                    p.closeInventory();
+                    SND.km.setKit(p, Kit.SCOUT, SND.tm.getTeam(p));
+                } else if (name.equals("§aExplosive Kit")&&m==Material.TNT) {
+                    e.setCancelled(true);
+                    p.closeInventory();
+                    SND.km.setKit(p, Kit.EXPLOSIVE, SND.tm.getTeam(p));
+            } else if (name.equals("§aWizard Kit")&&m==Material.BLAZE_ROD) {
+                    e.setCancelled(true);
+                    p.closeInventory();
+                    SND.km.setKit(p, Kit.WIZARD, SND.tm.getTeam(p));
                 }
             } catch (NullPointerException npe) {}
         }
