@@ -13,6 +13,9 @@ public class CommandLeave {
         } else {
             if (SND.gm.isPlaying(p)) {
                 SND.gm.broadcastMessageInGame(SND.TAG_RED + SND.tm.getPlayerNameInTeamColor(p) + " §cleft the game.");
+                for (PotionEffect effect : p.getActivePotionEffects()) {
+                    p.removePotionEffect(effect.getType());
+                }
                 SND.gm.removePlayerFromGame(p);
                 if (SND.gm.getPlaying().size()==0) {
                     SND.gm.setGameState(GameState.LOBBY);
@@ -28,6 +31,9 @@ public class CommandLeave {
                 SND.gm.updateJoinSign();
             } else if (SND.sm.isSpectator(p)) {
                 SND.gm.broadcastMessageInGame(SND.TAG_RED + p.getName() + " stopped spectating.", true);
+                for (PotionEffect effect : p.getActivePotionEffects()) {
+                    p.removePotionEffect(effect.getType());
+                }
                 SND.sm.removeSpectator(p);
                 p.teleport(SND.lh.getExitSpawn());
                 if (SND.gm.getPlaying().size()==0) {

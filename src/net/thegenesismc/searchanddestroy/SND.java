@@ -134,7 +134,8 @@ public class SND extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-
+        SND.gm.broadcastMessageInGame(SND.TAG_RED + "The game is ending due to a server restart!");
+        SND.gm.endGame();
     }
 
     private void registerListeners(Listener... listeners) {
@@ -238,6 +239,117 @@ public class SND extends JavaPlugin implements Listener {
                 }
             }
         }
+    }
+
+    @EventHandler
+    public void onBombFuse(PlayerInteractEvent e) {
+        Player p = e.getPlayer();
+        try {
+            if (e.getAction()==Action.RIGHT_CLICK_BLOCK) {
+                Block b = e.getClickedBlock();
+                if (b.getType()==Material.TNT) {
+                    if (e.getItem().getType()==Material.BLAZE_POWDER) {
+                        if (SND.gm.isPlaying(p)) {
+                            if (SND.tm.getTeam(p)==Team.RED&&b.getLocation()==SND.lh.getBlueBombSpawn().getBlock().getLocation()) {
+                                for (Player pl : Bukkit.getOnlinePlayers()) {
+                                    if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                                        pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
+                                    }
+                                }
+                                SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has been lit! They have 30 seconds to defuse it before it blows up!", true);
+                                SND.bm.setBlueFused(true);
+                                getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (SND.bm.isBlueFused()) {
+                                            SND.bm.setBlueFused(false);
+                                            Block b = SND.lh.getBlueBombSpawn().getBlock();
+                                            b.getWorld().playSound(b.getLocation(), Sound.EXPLODE, 1, 1);
+                                            SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has blown up! §cRed team §9wins!", true);
+                                            for (int i=1;i<4;i++) {
+                                                shootFirework(SND.lh.getRedSpawn());
+                                            }
+                                            SND.gm.endGame();
+                                        }
+                                    }
+                                }, 30 * 20);
+                            } else if (SND.tm.getTeam(p)==Team.BLUE&&b.getLocation()==SND.lh.getRedBombSpawn().getBlock().getLocation()) {
+                                for (Player pl : Bukkit.getOnlinePlayers()) {
+                                    if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                                        pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
+                                    }
+                                }
+                                SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has been lit! They have 30 seconds to defuse it before it blows up!", true);
+                                SND.bm.setRedFused(true);
+                                getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (SND.bm.isRedFused()) {
+                                            SND.bm.setRedFused(false);
+                                            Block b = SND.lh.getRedBombSpawn().getBlock();
+                                            b.getWorld().playSound(b.getLocation(), Sound.EXPLODE, 1, 1);
+                                            SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has blown up! Blue team wins!", true);
+                                            for (int i=1;i<4;i++) {
+                                                shootFirework(SND.lh.getBlueSpawn());
+                                            }
+                                            SND.gm.endGame();
+                                        }
+                                    }
+                                }, 30 * 20);
+                            } else if (SND.tm.getTeam(p)==Team.RED&&b.getLocation()==SND.lh.getRedBombSpawn().getBlock().getLocation()) {
+                                if (SND.bm.isRedFused()) {
+                                    SND.bm.setRedFused(false);
+                                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team §9defused their bomb in time!", true);
+                                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team §9wins!", true);
+                                    getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                                        int num = 3;
+                                        @Override
+                                        public void run() {
+                                            if (num!=-1) {
+                                                if (num!=0) {
+                                                    shootFirework(SND.lh.getRedSpawn());
+                                                    num--;
+                                                } else {
+                                                    SND.gm.endGame();
+                                                    num--;
+                                                }
+                                            }
+                                        }
+                                    }, 0L, 30L);
+                                } else {
+                                    p.sendMessage(SND.TAG_BLUE + "Your bomb isn't fused yet.");
+                                }
+                            } else if (SND.tm.getTeam(p)==Team.BLUE&&b.getLocation()==SND.lh.getBlueBombSpawn().getBlock().getLocation()) {
+                                if (SND.bm.isBlueFused()) {
+                                    SND.bm.setBlueFused(false);
+                                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team defused their bomb in time!", true);
+                                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team wins!", true);
+                                    getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                                        int num = 3;
+                                        @Override
+                                        public void run() {
+                                            if (num!=-1) {
+                                                if (num!=0) {
+                                                    shootFirework(SND.lh.getBlueSpawn());
+                                                    num--;
+                                                } else {
+                                                    SND.gm.endGame();
+                                                    num--;
+                                                }
+                                            }
+                                        }
+                                    }, 0L, 30L);
+                                } else {
+                                    p.sendMessage(SND.TAG_BLUE + "Your bomb isn't fused yet.");
+                                }
+                            } else {
+                                p.sendMessage("lol");
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (NullPointerException npe) {}
     }
 
     @EventHandler
@@ -353,109 +465,6 @@ public class SND extends JavaPlugin implements Listener {
                         }
                     }
                 }, 0L, 30L);
-            }
-        }
-    }
-
-    @EventHandler
-    public void onBombFuse(PlayerInteractEvent e) {
-        Player p = e.getPlayer();
-        if (e.getAction()==Action.RIGHT_CLICK_BLOCK) {
-            Block b = e.getClickedBlock();
-            if (b.getType()==Material.TNT&&e.getItem().getType()==Material.BLAZE_POWDER) {
-                if (SND.tm.getTeam(p)==Team.RED&&b.getLocation()==SND.lh.getBlueBombSpawn()) {
-                    for (Player pl : Bukkit.getOnlinePlayers()) {
-                        if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
-                            pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
-                        }
-                    }
-                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has been lit! They have 30 seconds to defuse it before it blows up!", true);
-                    SND.bm.setBlueFused(true);
-                    getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-                        @Override
-                        public void run() {
-                            if (SND.bm.isBlueFused()) {
-                                SND.bm.setBlueFused(false);
-                                Block b = SND.lh.getBlueBombSpawn().getBlock();
-                                b.getWorld().playSound(b.getLocation(), Sound.EXPLODE, 1, 1);
-                                SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has blown up! §cRed team §9wins!", true);
-                                for (int i=1;i<4;i++) {
-                                    shootFirework(SND.lh.getRedSpawn());
-                                }
-                                SND.gm.endGame();
-                            }
-                        }
-                    }, 30 * 20);
-                } else if (SND.tm.getTeam(p)==Team.BLUE&&b.getLocation()==SND.lh.getRedBombSpawn()) {
-                    for (Player pl : Bukkit.getOnlinePlayers()) {
-                        if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
-                            pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
-                        }
-                    }
-                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has been lit! They have 30 seconds to defuse it before it blows up!", true);
-                    SND.bm.setRedFused(true);
-                    getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-                        @Override
-                        public void run() {
-                            if (SND.bm.isRedFused()) {
-                                SND.bm.setRedFused(false);
-                                Block b = SND.lh.getRedBombSpawn().getBlock();
-                                b.getWorld().playSound(b.getLocation(), Sound.EXPLODE, 1, 1);
-                                SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has blown up! Blue team wins!", true);
-                                for (int i=1;i<4;i++) {
-                                    shootFirework(SND.lh.getBlueSpawn());
-                                }
-                                SND.gm.endGame();
-                            }
-                        }
-                    }, 30 * 20);
-                } else if (SND.tm.getTeam(p)==Team.RED&&b.getLocation()==SND.lh.getRedBombSpawn()) {
-                    if (SND.bm.isRedFused()) {
-                        SND.bm.setRedFused(false);
-                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team §9defused their bomb in time!", true);
-                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team §9wins!", true);
-                        getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-                            int num = 3;
-                            @Override
-                            public void run() {
-                                if (num!=-1) {
-                                    if (num!=0) {
-                                        shootFirework(SND.lh.getRedSpawn());
-                                        num--;
-                                    } else {
-                                        SND.gm.endGame();
-                                        num--;
-                                    }
-                                }
-                            }
-                        }, 0L, 30L);
-                    } else {
-                        p.sendMessage(SND.TAG_BLUE + "Your bomb isn't fused yet.");
-                    }
-                } else if (SND.tm.getTeam(p)==Team.BLUE&&b.getLocation()==SND.lh.getBlueBombSpawn()) {
-                    if (SND.bm.isBlueFused()) {
-                        SND.bm.setBlueFused(false);
-                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team defused their bomb in time!", true);
-                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team wins!", true);
-                        getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-                            int num = 3;
-                            @Override
-                            public void run() {
-                                if (num!=-1) {
-                                    if (num!=0) {
-                                        shootFirework(SND.lh.getBlueSpawn());
-                                        num--;
-                                    } else {
-                                        SND.gm.endGame();
-                                        num--;
-                                    }
-                                }
-                            }
-                        }, 0L, 30L);
-                    } else {
-                        p.sendMessage(SND.TAG_BLUE + "Your bomb isn't fused yet.");
-                    }
-                }
             }
         }
     }
