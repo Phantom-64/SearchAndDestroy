@@ -303,89 +303,97 @@ public class SND extends JavaPlugin implements Listener {
                         if (SND.gm.isPlaying(p)) {
                             if (SND.tm.getTeam(p)==Team.RED&&loc.equals(SND.lh.getBlueBombSpawn())) {
                                 if (!SND.bm.isBlueFused()) {
-                                    for (Player pl : Bukkit.getOnlinePlayers()) {
-                                        if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
-                                            pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
-                                        }
-                                    }
-                                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has been lit! They have 15 seconds to defuse it before it blows up!", true);
-                                    SND.bm.setBlueFused(true);
-                                    getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-                                        int fuse = 15;
-                                        @Override
-                                        public void run() {
-                                            if (fuse!=-1) {
-                                                if (fuse!=0) {
-                                                    for (Player pl : Bukkit.getOnlinePlayers()) {
-                                                        if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
-                                                            pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
-                                                            BarAPI.setMessage(pl, "§9§l" + fuse + "§r§9...", 100);
-                                                        }
-                                                    }
-                                                    fuse--;
-                                                } else {
-                                                    if (SND.bm.isBlueFused()&&SND.gm.getPlaying().size()!=0) {
-                                                        SND.bm.setBlueFused(false);
-                                                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has blown up! §cRed team §9wins!", true);
-                                                        for (int i=1;i<4;i++) {
-                                                            shootFirework(SND.lh.getRedSpawn());
-                                                        }
-                                                        SND.gm.endGame();
-                                                        for (Player pl : Bukkit.getOnlinePlayers()) {
-                                                            if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
-                                                                BarAPI.removeBar(pl);
-                                                                pl.getWorld().playSound(pl.getLocation(), Sound.EXPLODE, 1, 1);
-                                                            }
-                                                        }
-                                                    }
-                                                    fuse--;
-                                                }
+                                    if (!SND.bm.isRedFused()) {
+                                        for (Player pl : Bukkit.getOnlinePlayers()) {
+                                            if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                                                pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
                                             }
                                         }
-                                    }, 0L, 20L);
+                                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team§b's bomb has been lit! They have 15 seconds to defuse it before it blows up!", true);
+                                        SND.bm.setBlueFused(true);
+                                        getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                                            int fuse = 15;
+                                            @Override
+                                            public void run() {
+                                                if (fuse!=-1) {
+                                                    if (fuse!=0) {
+                                                        for (Player pl : Bukkit.getOnlinePlayers()) {
+                                                            if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                                                                pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
+                                                                BarAPI.setMessage(pl, "§9§l" + fuse + "§r§9...", 100);
+                                                            }
+                                                        }
+                                                        fuse--;
+                                                    } else {
+                                                        if (SND.bm.isBlueFused()&&SND.gm.getPlaying().size()!=0) {
+                                                            SND.bm.setBlueFused(false);
+                                                            SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has blown up! §cRed team §9wins!", true);
+                                                            for (int i=1;i<4;i++) {
+                                                                shootFirework(SND.lh.getRedSpawn());
+                                                            }
+                                                            SND.gm.endGame();
+                                                            for (Player pl : Bukkit.getOnlinePlayers()) {
+                                                                if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                                                                    BarAPI.removeBar(pl);
+                                                                    pl.getWorld().playSound(pl.getLocation(), Sound.EXPLODE, 1, 1);
+                                                                }
+                                                            }
+                                                        }
+                                                        fuse--;
+                                                    }
+                                                }
+                                            }
+                                        }, 0L, 20L);
+                                    } else {
+                                        p.sendMessage(SND.TAG_BLUE + "Defuse your own bomb first!");
+                                    }
                                 } else {
                                     p.sendMessage(SND.TAG_BLUE + "This bomb is already fused.");
                                 }
                             } else if (SND.tm.getTeam(p)==Team.BLUE&&loc.equals(SND.lh.getRedBombSpawn())) {
                                 if (!SND.bm.isRedFused()) {
-                                    for (Player pl : Bukkit.getOnlinePlayers()) {
-                                        if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
-                                            pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
-                                        }
-                                    }
-                                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has been lit! They have 15 seconds to defuse it before it blows up!", true);
-                                    SND.bm.setRedFused(true);
-                                    getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-                                        int fuse = 15;
-                                        @Override
-                                        public void run() {
-                                            if (fuse!=-1) {
-                                                if(fuse!=0) {
-                                                    for (Player pl : Bukkit.getOnlinePlayers()) {
-                                                        if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
-                                                            pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
-                                                            BarAPI.setMessage(pl, "§c§l" + fuse + "§r§c...", 100);
-                                                        }
-                                                    }
-                                                    fuse--;
-                                                } else {
-                                                    if (SND.bm.isRedFused()&&SND.gm.getPlaying().size()!=0) {
-                                                        SND.bm.setRedFused(false);
-                                                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has blown up! Blue team wins!", true);
-                                                        for (int i=1;i<4;i++) {
-                                                            shootFirework(SND.lh.getBlueSpawn());
-                                                        }
-                                                        SND.gm.endGame();
-                                                        for (Player pl : Bukkit.getOnlinePlayers()) {
-                                                            BarAPI.removeBar(pl);
-                                                            pl.getWorld().playSound(pl.getLocation(), Sound.EXPLODE, 1, 1);
-                                                        }
-                                                    }
-                                                    fuse--;
-                                                }
+                                    if (!SND.bm.isBlueFused()) {
+                                        for (Player pl : Bukkit.getOnlinePlayers()) {
+                                            if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                                                pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
                                             }
                                         }
-                                    }, 0L, 20L);
+                                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§b's bomb has been lit! They have 15 seconds to defuse it before it blows up!", true);
+                                        SND.bm.setRedFused(true);
+                                        getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                                            int fuse = 15;
+                                            @Override
+                                            public void run() {
+                                                if (fuse!=-1) {
+                                                    if(fuse!=0) {
+                                                        for (Player pl : Bukkit.getOnlinePlayers()) {
+                                                            if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                                                                pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
+                                                                BarAPI.setMessage(pl, "§c§l" + fuse + "§r§c...", 100);
+                                                            }
+                                                        }
+                                                        fuse--;
+                                                    } else {
+                                                        if (SND.bm.isRedFused()&&SND.gm.getPlaying().size()!=0) {
+                                                            SND.bm.setRedFused(false);
+                                                            SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has blown up! Blue team wins!", true);
+                                                            for (int i=1;i<4;i++) {
+                                                                shootFirework(SND.lh.getBlueSpawn());
+                                                            }
+                                                            SND.gm.endGame();
+                                                            for (Player pl : Bukkit.getOnlinePlayers()) {
+                                                                BarAPI.removeBar(pl);
+                                                                pl.getWorld().playSound(pl.getLocation(), Sound.EXPLODE, 1, 1);
+                                                            }
+                                                        }
+                                                        fuse--;
+                                                    }
+                                                }
+                                            }
+                                        }, 0L, 20L);
+                                    } else {
+                                        p.sendMessage(SND.TAG_BLUE + "Defuse your own bomb first!");
+                                    }
                                 } else {
                                     p.sendMessage(SND.TAG_BLUE + "This bomb is already fused.");
                                 }
@@ -691,7 +699,7 @@ public class SND extends JavaPlugin implements Listener {
         LocationHandler lh = SND.lh;
         if (p.isOp()) {
             if (lh.getRedBombSpawn()==null||lh.getBlueBombSpawn()==null||lh.getRedSpawn()==null||lh.getBlueSpawn()==null||lh.getExitSpawn()==null) {
-                p.sendMessage(SND.TAG_BLUE + "All the spawns are not set.");
+                p.sendMessage(SND.TAG_BLUE + "All the spawns are not set. Please set them using /snd setspawn and /snd setbombspawn immediately or you will not be able to play.");
             }
         }
         SND.gm.removePlayerFromGame(e.getPlayer());

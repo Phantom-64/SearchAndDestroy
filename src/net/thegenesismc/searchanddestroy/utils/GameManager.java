@@ -1,5 +1,6 @@
 package net.thegenesismc.searchanddestroy.utils;
 
+import me.confuser.barapi.BarAPI;
 import net.thegenesismc.searchanddestroy.SND;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -203,6 +204,7 @@ public class GameManager {
             p.setHealth(20.0);
             p.setExp(0);
             p.setLevel(0);
+            BarAPI.removeBar(p);
             p.sendMessage(SND.TAG_GREEN + "You will be kicked from the server in 5 seconds!");
         }
         for (Block b : SND.pressurePlateList) {
