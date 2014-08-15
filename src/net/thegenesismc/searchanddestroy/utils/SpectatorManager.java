@@ -31,6 +31,7 @@ public class SpectatorManager {
         p.setCanPickupItems(false);
         p.setAllowFlight(true);
         p.setFlying(true);
+        p.setFireTicks(0);
         for (Player pl : Bukkit.getOnlinePlayers()) {
             pl.hidePlayer(p);
         }

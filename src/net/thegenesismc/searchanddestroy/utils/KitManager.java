@@ -63,13 +63,7 @@ public class KitManager {
             fusemeta.setDisplayName("§5Fuse");
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
-            ItemStack defuse = new ItemStack(Material.MAGMA_CREAM, 1);
-            ItemMeta defusemeta = defuse.getItemMeta();
-            defusemeta.setDisplayName("§dDefuser");
-            defusemeta.setLore(Arrays.asList("Use this to defuse your", "team's bomb!"));
-            defuse.setItemMeta(defusemeta);
             inv.setItem(8, fuse);
-            inv.setItem(7, defuse);
         } else if (kit==Kit.JUGGERNAUT) {
             ItemStack chest = new ItemStack(Material.IRON_CHESTPLATE, 1);
             chest.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
@@ -87,13 +81,7 @@ public class KitManager {
             fusemeta.setDisplayName("§5Fuse");
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
-            ItemStack defuse = new ItemStack(Material.MAGMA_CREAM, 1);
-            ItemMeta defusemeta = defuse.getItemMeta();
-            defusemeta.setDisplayName("§dDefuser");
-            defusemeta.setLore(Arrays.asList("Use this to defuse your", "team's bomb!"));
-            defuse.setItemMeta(defusemeta);
             inv.setItem(8, fuse);
-            inv.setItem(7, defuse);
         } else if (kit==Kit.SPY) {
             ItemStack sword = new ItemStack(Material.GOLD_SWORD, 1);
             sword.addEnchantment(Enchantment.FIRE_ASPECT, 2);
@@ -106,21 +94,15 @@ public class KitManager {
             fusemeta.setDisplayName("§5Fuse");
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
-            ItemStack defuse = new ItemStack(Material.MAGMA_CREAM, 1);
-            ItemMeta defusemeta = defuse.getItemMeta();
-            defusemeta.setDisplayName("§dDefuser");
-            defusemeta.setLore(Arrays.asList("Use this to defuse your", "team's bomb!"));
-            defuse.setItemMeta(defusemeta);
             inv.setItem(8, fuse);
-            inv.setItem(7, defuse);
         } else if (kit==Kit.SNIPER) {
             ItemStack bow = new ItemStack(Material.BOW, 1);
             bow.addEnchantment(Enchantment.ARROW_DAMAGE, 2);
             bow.addEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
             bow.addEnchantment(Enchantment.ARROW_INFINITE, 1);
-            inv.setChestplate(new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1));
-            inv.setLeggings(new ItemStack(Material.CHAINMAIL_LEGGINGS, 1));
-            inv.setBoots(new ItemStack(Material.CHAINMAIL_BOOTS, 1));
+            inv.setChestplate(new ItemStack(Material.IRON_CHESTPLATE, 1));
+            inv.setLeggings(new ItemStack(Material.IRON_LEGGINGS, 1));
+            inv.setBoots(new ItemStack(Material.IRON_BOOTS, 1));
             inv.addItem(new ItemStack(Material.WOOD_SWORD, 1));
             inv.addItem(bow);
             inv.addItem(new ItemStack(Material.ARROW, 1));
@@ -129,13 +111,7 @@ public class KitManager {
             fusemeta.setDisplayName("§5Fuse");
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
-            ItemStack defuse = new ItemStack(Material.MAGMA_CREAM, 1);
-            ItemMeta defusemeta = defuse.getItemMeta();
-            defusemeta.setDisplayName("§dDefuser");
-            defusemeta.setLore(Arrays.asList("Use this to defuse your", "team's bomb!"));
-            defuse.setItemMeta(defusemeta);
             inv.setItem(8, fuse);
-            inv.setItem(7, defuse);
         } else if (kit==Kit.SCOUT) {
             ItemStack chest = new ItemStack(Material.GOLD_CHESTPLATE, 1);
             chest.addEnchantment(Enchantment.DURABILITY, 3);
@@ -154,13 +130,7 @@ public class KitManager {
             fusemeta.setDisplayName("§5Fuse");
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
-            ItemStack defuse = new ItemStack(Material.MAGMA_CREAM, 1);
-            ItemMeta defusemeta = defuse.getItemMeta();
-            defusemeta.setDisplayName("§dDefuser");
-            defusemeta.setLore(Arrays.asList("Use this to defuse your", "team's bomb!"));
-            defuse.setItemMeta(defusemeta);
             inv.setItem(8, fuse);
-            inv.setItem(7, defuse);
         } else if (kit==Kit.EXPLOSIVE) {
             ItemStack sword = new ItemStack(Material.STONE_SWORD, 1);
             sword.addEnchantment(Enchantment.DAMAGE_ALL, 1);
@@ -172,9 +142,15 @@ public class KitManager {
             ItemMeta platemeta = plates.getItemMeta();
             platemeta.setDisplayName("Death plates");
             plates.setItemMeta(platemeta);
-            inv.setChestplate(new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1));
-            inv.setLeggings(new ItemStack(Material.CHAINMAIL_LEGGINGS, 1));
-            inv.setBoots(new ItemStack(Material.CHAINMAIL_BOOTS, 1));
+            ItemStack chest = new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1);
+            chest.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1);
+            ItemStack leggings = new ItemStack(Material.CHAINMAIL_LEGGINGS, 1);
+            leggings.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1);
+            ItemStack boots = new ItemStack(Material.CHAINMAIL_BOOTS, 1);
+            boots.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1);
+            inv.setChestplate(chest);
+            inv.setLeggings(leggings);
+            inv.setBoots(boots);
             inv.addItem(sword);
             inv.addItem(grenades);
             inv.addItem(plates);
@@ -183,39 +159,42 @@ public class KitManager {
             fusemeta.setDisplayName("§5Fuse");
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
-            ItemStack defuse = new ItemStack(Material.MAGMA_CREAM, 1);
-            ItemMeta defusemeta = defuse.getItemMeta();
-            defusemeta.setDisplayName("§dDefuser");
-            defusemeta.setLore(Arrays.asList("Use this to defuse your", "team's bomb!"));
-            defuse.setItemMeta(defusemeta);
             inv.setItem(8, fuse);
-            inv.setItem(7, defuse);
         } else if (kit==Kit.WIZARD) {
-            inv.setChestplate(new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1));
-            inv.setLeggings(new ItemStack(Material.CHAINMAIL_LEGGINGS, 1));
-            inv.setBoots(new ItemStack(Material.CHAINMAIL_BOOTS, 1));
-            inv.addItem(new ItemStack(Material.STONE_SWORD, 1));
-            inv.addItem(new ItemStack(Material.BLAZE_ROD, 1));
+            ItemStack chest = new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1);
+            chest.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1);
+            ItemStack leggings = new ItemStack(Material.CHAINMAIL_LEGGINGS, 1);
+            leggings.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1);
+            ItemStack boots = new ItemStack(Material.CHAINMAIL_BOOTS, 1);
+            boots.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1);
+            ItemStack staff = new ItemStack(Material.BLAZE_ROD, 1);
+            ItemMeta staffmeta = staff.getItemMeta();
+            staffmeta.setDisplayName("Staff");
+            staffmeta.setLore(Arrays.asList("Left click to shoot fireballs!"));
+            staff.setItemMeta(staffmeta);
+            ItemStack sword = new ItemStack(Material.STONE_SWORD, 1);
+            sword.addEnchantment(Enchantment.DAMAGE_ALL, 1);
+            inv.setChestplate(chest);
+            inv.setLeggings(leggings);
+            inv.setBoots(boots);
+            inv.addItem(sword);
+            inv.addItem(staff);
             ItemStack fuse = new ItemStack(Material.BLAZE_POWDER, 1);
             ItemMeta fusemeta = fuse.getItemMeta();
             fusemeta.setDisplayName("§5Fuse");
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
-            ItemStack defuse = new ItemStack(Material.MAGMA_CREAM, 1);
-            ItemMeta defusemeta = defuse.getItemMeta();
-            defusemeta.setDisplayName("§dDefuser");
-            defusemeta.setLore(Arrays.asList("Use this to defuse your", "team's bomb!"));
-            defuse.setItemMeta(defusemeta);
             inv.setItem(8, fuse);
-            inv.setItem(7, defuse);
         }
 
-        if (team==Team.RED) {
-            ItemStack red = new ItemStack(Material.WOOL, 1, DyeColor.RED.getData());
-            inv.setHelmet(red);
-        } else if (team==Team.BLUE) {
-            ItemStack blue = new ItemStack(Material.WOOL, 1, DyeColor.BLUE.getData());
-            inv.setHelmet(blue);
+        if (kit!=Kit.SPY) {
+            if (team==Team.RED) {
+                ItemStack red = new ItemStack(Material.WOOL, 1, DyeColor.RED.getData());
+                inv.setHelmet(red);
+            } else if (team==Team.BLUE) {
+                ItemStack blue = new ItemStack(Material.WOOL, 1, DyeColor.BLUE.getData());
+                inv.setHelmet(blue);
+            }
         }
     }
 

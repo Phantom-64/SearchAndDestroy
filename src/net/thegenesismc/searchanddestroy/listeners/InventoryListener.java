@@ -29,34 +29,53 @@ public class InventoryListener implements Listener {
                 ItemStack kit = e.getCurrentItem();
                 String name = kit.getItemMeta().getDisplayName();
                 Material m = kit.getType();
-                if (name.equals("§bAssault Kit")&&m==Material.IRON_SWORD) {
+                if (name.equals("§aAssault Kit")&&m==Material.IRON_SWORD) {
+                    p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
                     e.setCancelled(true);
                     p.closeInventory();
                     SND.km.setKit(p, Kit.ASSAULT, SND.tm.getTeam(p));
-                } else if (name.equals("§bJuggernaut Kit")&&m==Material.STONE_SWORD) {
+                } else if (name.equals("§aJuggernaut Kit")&&m==Material.STONE_SWORD) {
+                    p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
                     e.setCancelled(true);
                     p.closeInventory();
                     SND.km.setKit(p, Kit.JUGGERNAUT, SND.tm.getTeam(p));
-                } else if (name.equals("§bSpy Kit")&&m==Material.ENDER_PEARL) {
+                } else if (name.equals("§aSpy Kit")&&m==Material.ENDER_PEARL) {
+                    p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
                     e.setCancelled(true);
                     p.closeInventory();
                     SND.km.setKit(p, Kit.SPY, SND.tm.getTeam(p));
-                } else if (name.equals("§bSniper Kit")&&m==Material.BOW) {
+                } else if (name.equals("§aSniper Kit")&&m==Material.BOW) {
+                    p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
                     e.setCancelled(true);
                     p.closeInventory();
                     SND.km.setKit(p, Kit.SNIPER, SND.tm.getTeam(p));
-                } else if (name.equals("§bScout Kit")&&m==Material.DIAMOND_AXE) {
+                } else if (name.equals("§aScout Kit")&&m==Material.DIAMOND_AXE) {
+                    p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
                     e.setCancelled(true);
                     p.closeInventory();
                     SND.km.setKit(p, Kit.SCOUT, SND.tm.getTeam(p));
                 } else if (name.equals("§aExplosive Kit")&&m==Material.TNT) {
-                    e.setCancelled(true);
-                    p.closeInventory();
-                    SND.km.setKit(p, Kit.EXPLOSIVE, SND.tm.getTeam(p));
+                    if (p.hasPermission("snd.donator")) {
+                        p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
+                        e.setCancelled(true);
+                        p.closeInventory();
+                        SND.km.setKit(p, Kit.EXPLOSIVE, SND.tm.getTeam(p));
+                    } else {
+                        e.setCancelled(true);
+                        p.closeInventory();
+                        p.sendMessage(SND.TAG_RED + "You don't have permission for this kit!");
+                    }
             } else if (name.equals("§aWizard Kit")&&m==Material.BLAZE_ROD) {
-                    e.setCancelled(true);
-                    p.closeInventory();
-                    SND.km.setKit(p, Kit.WIZARD, SND.tm.getTeam(p));
+                    if (p.hasPermission("snd.donator")) {
+                        p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
+                        e.setCancelled(true);
+                        p.closeInventory();
+                        SND.km.setKit(p, Kit.WIZARD, SND.tm.getTeam(p));
+                    } else {
+                        e.setCancelled(true);
+                        p.closeInventory();
+                        p.sendMessage(SND.TAG_RED + "You don't have permission for this kit!");
+                    }
                 }
             } catch (NullPointerException npe) {}
         }

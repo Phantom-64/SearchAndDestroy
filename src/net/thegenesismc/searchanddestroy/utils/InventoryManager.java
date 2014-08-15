@@ -63,38 +63,31 @@ public class InventoryManager {
         Inventory inv = Bukkit.createInventory(null, 18, "§4SND §aKit Selector");
         ItemStack assault = new ItemStack(Material.IRON_SWORD, 1);
         ItemMeta assaultmeta = assault.getItemMeta();
-        assaultmeta.setDisplayName("§bAssault Kit");
-        assaultmeta.setLore(Arrays.asList("§7Non Donator Kit"));
+        assaultmeta.setDisplayName("§aAssault Kit");
         assault.setItemMeta(assaultmeta);
         ItemStack jugger = new ItemStack(Material.STONE_SWORD, 1);
         ItemMeta juggermeta = jugger.getItemMeta();
-        juggermeta.setDisplayName("§bJuggernaut Kit");
-        juggermeta.setLore(Arrays.asList("§7Non Donator Kit"));
+        juggermeta.setDisplayName("§aJuggernaut Kit");
         jugger.setItemMeta(juggermeta);
         ItemStack spy = new ItemStack(Material.ENDER_PEARL, 1);
         ItemMeta spymeta = spy.getItemMeta();
-        spymeta.setDisplayName("§bSpy Kit");
-        spymeta.setLore(Arrays.asList("§7Non Donator Kit"));
+        spymeta.setDisplayName("§aSpy Kit");
         spy.setItemMeta(spymeta);
         ItemStack sniper = new ItemStack(Material.BOW, 1);
         ItemMeta snipermeta = sniper.getItemMeta();
-        snipermeta.setDisplayName("§bSniper Kit");
-        snipermeta.setLore(Arrays.asList("§7Non Donator Kit"));
+        snipermeta.setDisplayName("§aSniper Kit");
         sniper.setItemMeta(snipermeta);
         ItemStack scout = new ItemStack(Material.DIAMOND_AXE, 1);
         ItemMeta scoutmeta = scout.getItemMeta();
-        scoutmeta.setDisplayName("§bScout Kit");
-        scoutmeta.setLore(Arrays.asList("§7Non Donator Kit"));
+        scoutmeta.setDisplayName("§aScout Kit");
         scout.setItemMeta(scoutmeta);
         ItemStack explosive = new ItemStack(Material.TNT, 1);
         ItemMeta explosivemeta = explosive.getItemMeta();
         explosivemeta.setDisplayName("§aExplosive Kit");
-        explosivemeta.setLore(Arrays.asList("§fDonator Kit"));
         explosive.setItemMeta(explosivemeta);
         ItemStack wizard = new ItemStack(Material.BLAZE_ROD, 1);
         ItemMeta wizardmeta = wizard.getItemMeta();
         wizardmeta.setDisplayName("§aWizard Kit");
-        wizardmeta.setLore(Arrays.asList("§fDonator Kit"));
         wizard.setItemMeta(wizardmeta);
         inv.setItem(0, assault);
         inv.setItem(1, jugger);
@@ -104,5 +97,14 @@ public class InventoryManager {
         inv.setItem(9, explosive);
         inv.setItem(10, wizard);
         p.openInventory(inv);
+    }
+
+    public void giveKitSelector(Player p) {
+        ItemStack kitselector = new ItemStack(Material.NETHER_STAR, 1);
+        ItemMeta kitmeta = kitselector.getItemMeta();
+        kitmeta.setDisplayName("§bKit Selector");
+        kitmeta.setLore(Arrays.asList("Right click this to select", "your kit!"));
+        kitselector.setItemMeta(kitmeta);
+        p.getInventory().addItem(kitselector);
     }
 }

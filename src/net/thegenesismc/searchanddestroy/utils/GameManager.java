@@ -80,6 +80,16 @@ public class GameManager {
         return playing.contains(p);
     }
 
+    private boolean ended;
+
+    public boolean isEnded() {
+        return ended;
+    }
+
+    public void setEnded(boolean ended) {
+        this.ended = ended;
+    }
+
     public void addPlayerToGame(Player p, Team team, Kit kit) {
         getPlaying().add(p);
         SND.tm.setTeam(p, team);
@@ -173,22 +183,43 @@ public class GameManager {
     public void endGame() {
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (SND.gm.isPlaying(p)) {
+                Team team = SND.tm.getTeam(p);
                 SND.gm.removePlayerFromGame(p);
-                p.teleport(SND.lh.getExitSpawn());
+                p.teleport(SND.getTeamSpawn(team));
+                p.setHealth(20.0);
             } else if (SND.lm.isInLobby(p)) {
                 SND.lm.removePlayerFromLobby(p);
                 p.teleport(SND.lh.getExitSpawn());
+                p.setHealth(20.0);
             } else if (SND.sm.isSpectator(p)) {
                 SND.sm.removeSpectator(p);
-                p.teleport(SND.lh.getExitSpawn());
+                p.teleport(SND.lh.getSpectatorSpawn());
+                p.setHealth(20.0);
             }
             for (PotionEffect effect : p.getActivePotionEffects()) {
                 p.removePotionEffect(effect.getType());
             }
+            p.setFireTicks(0);
+            p.setHealth(20.0);
+            p.setExp(0);
+            p.setLevel(0);
+            p.sendMessage(SND.TAG_GREEN + "You will be kicked from the server in 5 seconds!");
+        }
+        for (Block b : SND.pressurePlateList) {
+            b.setType(Material.AIR);
         }
         SND.lh.getRedBombSpawn().getBlock().setType(Material.AIR);
         SND.lh.getBlueBombSpawn().getBlock().setType(Material.AIR);
         SND.gm.setGameState(GameState.LOBBY);
         SND.gm.updateJoinSign();
+        SND.gm.setEnded(false);
+        plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+            @Override
+            public void run() {
+                for (Player pl : Bukkit.getOnlinePlayers()) {
+                    pl.kickPlayer("  " + SND.TAG_GREEN + "\n" + "§aThe game is over!");
+                }
+            }
+        }, 5 * 20);
     }
 }

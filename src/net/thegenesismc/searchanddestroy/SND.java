@@ -1,6 +1,6 @@
 package net.thegenesismc.searchanddestroy;
 
-import net.thegenesismc.searchanddestroy.commands.CommandLeave;
+import me.confuser.barapi.BarAPI;
 import net.thegenesismc.searchanddestroy.commands.CommandSetBombSpawn;
 import net.thegenesismc.searchanddestroy.commands.CommandSetSpawn;
 import net.thegenesismc.searchanddestroy.listeners.*;
@@ -19,11 +19,13 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 
-import java.util.Random;
+import java.util.*;
 
 /**
  * -----{ Search And Destroy }-----
@@ -103,6 +105,9 @@ public class SND extends JavaPlugin implements Listener {
     public static String TAG_BLUE = "§5[§3SearchAndDestroy§5] §9";
     public static String TAG_RED = "§5[§3SearchAndDestroy§5] §c";
 
+    private Map<Player, Boolean> canFireBall = new HashMap<Player, Boolean>();
+    public static List<Block> pressurePlateList = new ArrayList<Block>();
+
     //Too many managers :O
     public static LocationHandler lh;
     public static TeamManager tm;
@@ -115,10 +120,10 @@ public class SND extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        this.getConfig().options().copyDefaults(true);
-        this.saveConfig();
-        registerListeners(this, new SignListener(), new PlayerJoin(), new InventoryListener(), new BlockListener(),
-                new FoodLevelListener(), new NoDropListener());
+        getConfig().options().copyDefaults(true);
+        saveConfig();
+        registerListeners(this, new SignListener(), new InventoryListener(), new BlockListener(),
+                new FoodLevelListener(), new NoDropListener(), new PlayerQuit(), new PlayerChat());
         lh = new LocationHandler(this);
         tm = new TeamManager(this);
         km = new KitManager(this);
@@ -130,12 +135,43 @@ public class SND extends JavaPlugin implements Listener {
         tm.setupTeams();
         gm.setGameState(GameState.LOBBY);
         SND.gm.updateJoinSign();
+        SND.gm.setEnded(false);
     }
 
     @Override
     public void onDisable() {
         SND.gm.broadcastMessageInGame(SND.TAG_RED + "The game is ending due to a server restart!");
-        SND.gm.endGame();
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (SND.gm.isPlaying(p)) {
+                Team team = SND.tm.getTeam(p);
+                SND.gm.removePlayerFromGame(p);
+                p.teleport(SND.getTeamSpawn(team));
+            } else if (SND.lm.isInLobby(p)) {
+                SND.lm.removePlayerFromLobby(p);
+                p.teleport(SND.lh.getExitSpawn());
+            } else if (SND.sm.isSpectator(p)) {
+                SND.sm.removeSpectator(p);
+                p.teleport(SND.lh.getSpectatorSpawn());
+            }
+            for (PotionEffect effect : p.getActivePotionEffects()) {
+                p.removePotionEffect(effect.getType());
+            }
+            p.setFireTicks(0);
+            p.setHealth(20.0);
+            p.setExp(0);
+            p.setLevel(0);
+            for (Player pl : Bukkit.getOnlinePlayers()) {
+                pl.kickPlayer("  " + SND.TAG_GREEN + "\n" + "§bThe game ended due to a server restart!");
+            }
+        }
+        for (Block b : SND.pressurePlateList) {
+            b.setType(Material.AIR);
+        }
+        SND.lh.getRedBombSpawn().getBlock().setType(Material.AIR);
+        SND.lh.getBlueBombSpawn().getBlock().setType(Material.AIR);
+        SND.gm.setGameState(GameState.LOBBY);
+        SND.gm.updateJoinSign();
+        SND.gm.setEnded(false);
     }
 
     private void registerListeners(Listener... listeners) {
@@ -157,8 +193,6 @@ public class SND extends JavaPlugin implements Listener {
                     CommandSetSpawn.execute(p, args);
                 } else if (args[0].equalsIgnoreCase("setbombspawn")) {
                     CommandSetBombSpawn.execute(p, args);
-                } else if (args[0].equalsIgnoreCase("leave")) {
-                    CommandLeave.execute(p, args);
                 }
             } else {
                 sender.sendMessage(ChatColor.RED + "Only players can use this command.");
@@ -170,6 +204,8 @@ public class SND extends JavaPlugin implements Listener {
         return true;
     }
 
+    public static int timer = 500;
+
     @EventHandler
     public void onSignClick(PlayerInteractEvent e) {
         final Player p = e.getPlayer();
@@ -178,63 +214,77 @@ public class SND extends JavaPlugin implements Listener {
             if (b.getType() == Material.SIGN_POST || b.getType() == Material.WALL_SIGN) {
                 Sign s = (Sign) b.getState();
                 if (s.getLine(0).equalsIgnoreCase("§9[Join]") && s.getLine(1).equalsIgnoreCase("§aSND")) {
-                    if (SND.gm.getGameState()==GameState.LOBBY) {
-                        if (SND.lm.getLobby().size()>=SND.gm.getPlayerLimit()) {
-                            p.sendMessage(SND.TAG_RED + "This game is full.");
-                        } else if (SND.lm.getLobby().size()<SND.gm.getPlayerLimit()) {
-                            SND.lm.addPlayerToLobby(p);
-                            SND.gm.updateJoinSign();
-                            SND.lm.broadcastMessageInLobby(SND.TAG_GREEN + p.getName() + " joined the lobby. §2(§a" + SND.lm.getLobby().size() + "§2/§a" + SND.gm.getPlayerLimit() + "§2)");
-                            if (SND.lm.getLobby().size()>=SND.lm.getMinPlayersToStart()) {
-                                getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-                                    int num = 3;
-                                    @Override
-                                    public void run() {
-                                        if (num!=-1) {
-                                            if (num!=0) {
-                                                for (Player pl : SND.lm.getLobby()) {
-                                                    pl.setExp(0);
-                                                    pl.setLevel(num);
-                                                    pl.getWorld().playSound(p.getLocation(), Sound.CLICK, 1, 1);
-                                                }
-                                                num--;
-                                            } else {
-                                                for (Player pl : Bukkit.getOnlinePlayers()) {
-                                                    if (SND.lm.getLobby().contains(pl)) {
+                    Location loc = new Location(b.getWorld(), b.getX(), b.getY(), b.getZ());
+                    if (loc.equals(SND.gm.getJoinSignLocation())) {
+                        if (SND.gm.getGameState()==GameState.LOBBY) {
+                            if (SND.lm.getLobby().size()>=SND.gm.getPlayerLimit()) {
+                                p.sendMessage(SND.TAG_RED + "This game is full.");
+                            } else if (SND.lm.getLobby().size()<SND.gm.getPlayerLimit()) {
+                                SND.lm.addPlayerToLobby(p);
+                                SND.gm.updateJoinSign();
+                                SND.lm.broadcastMessageInLobby(SND.TAG_GREEN + p.getName() + " joined the lobby. §2(§a" + SND.lm.getLobby().size() + "§2/§a" + SND.gm.getPlayerLimit() + "§2)");
+                                if (SND.lm.getLobby().size()==1) {
+                                    timer = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                                        int num = 10;
+                                        @Override
+                                        public void run() {
+                                            if (num!=-1) {
+                                                if (num!=0) {
+                                                    for (Player pl : SND.lm.getLobby()) {
                                                         pl.setExp(0);
-                                                        pl.setLevel(0);
-                                                        pl.getWorld().playSound(pl.getLocation(), Sound.BURP, 1, 1);
-                                                        Team team = SND.tm.getValidTeam();
-                                                        SND.lm.removePlayerFromLobby(pl);
-                                                        SND.gm.addPlayerToGame(pl, team);
-                                                        SND.im.openKitSelector(pl);
+                                                        pl.setLevel(num);
+                                                    }
+                                                    num--;
+                                                } else {
+                                                    if (SND.lm.getLobby().size()>=SND.lm.getMinPlayersToStart()) {
+                                                        for (Player pl : Bukkit.getOnlinePlayers()) {
+                                                            if (SND.lm.getLobby().contains(pl)) {
+                                                                pl.setExp(0);
+                                                                pl.setLevel(0);
+                                                                Team team = SND.tm.getValidTeam();
+                                                                SND.lm.removePlayerFromLobby(pl);
+                                                                SND.gm.addPlayerToGame(pl, team);
+                                                                pl.getWorld().playSound(pl.getLocation(), Sound.LEVEL_UP, 1, 1);
+                                                                SND.im.giveKitSelector(pl);
+                                                                if (SND.tm.getTeam(pl)==Team.RED) {
+                                                                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + pl.getName() + " joined the §cRed team§9!");
+                                                                } else if (SND.tm.getTeam(pl)==Team.BLUE) {
+                                                                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + pl.getName() + " joined the Blue team!");
+                                                                }
+                                                            }
+                                                        }
+                                                        SND.lh.getRedBombSpawn().getBlock().setType(Material.TNT);
+                                                        SND.lh.getBlueBombSpawn().getBlock().setType(Material.TNT);
+                                                        SND.gm.setGameState(GameState.INGAME);
+                                                        SND.gm.updateJoinSign();
+                                                        num--;
+                                                    } else if (SND.lm.getLobby().size()<SND.lm.getMinPlayersToStart()) {
+                                                        SND.lm.broadcastMessageInLobby(SND.TAG_RED + "There weren't enough players to start. Restarting timer...");
+                                                        num = 10;
+                                                    } else if (SND.lm.getLobby().size()==0) {
+                                                        num = 10;
                                                     }
                                                 }
-                                                SND.lh.getRedBombSpawn().getBlock().setType(Material.TNT);
-                                                SND.lh.getBlueBombSpawn().getBlock().setType(Material.TNT);
-                                                SND.gm.setGameState(GameState.INGAME);
-                                                SND.gm.updateJoinSign();
-                                                num--;
                                             }
                                         }
-                                    }
-                                }, 0L, 20L);
+                                    }, 0L, 20L);
+                                }
                             }
-                        }
-                    } else if (SND.gm.getGameState()==GameState.INGAME) {
-                        if (SND.gm.getPlaying().size()<SND.gm.getPlayerLimit()) {
-                            if (!SND.gm.isPlaying(p)) {
-                                SND.gm.removePlayerFromGame(p);
-                                SND.sm.setSpectator(p);
-                                SND.gm.broadcastMessageInGame(SND.TAG_GREEN + p.getName() + " is spectating the game.", true);
+                        } else if (SND.gm.getGameState()==GameState.INGAME) {
+                            if (SND.gm.getPlaying().size()<SND.gm.getPlayerLimit()) {
+                                if (!SND.gm.isPlaying(p)) {
+                                    SND.gm.removePlayerFromGame(p);
+                                    SND.sm.setSpectator(p);
+                                    SND.gm.broadcastMessageInGame(SND.TAG_GREEN + p.getName() + " is spectating the game.", true);
+                                } else {
+                                    p.sendMessage(SND.TAG_BLUE + "You are already in the game.");
+                                }
                             } else {
-                                p.sendMessage(SND.TAG_BLUE + "You are already in the game.");
+                                p.sendMessage(SND.TAG_RED + "This game is full.");
                             }
                         } else {
-                            p.sendMessage(SND.TAG_RED + "This game is full.");
+                            p.sendMessage(SND.TAG_RED + "This game is not joinable right now.");
                         }
-                    } else {
-                        p.sendMessage(SND.TAG_RED + "This game is not joinable right now.");
                     }
                 }
             }
@@ -247,60 +297,104 @@ public class SND extends JavaPlugin implements Listener {
         try {
             if (e.getAction()==Action.RIGHT_CLICK_BLOCK) {
                 Block b = e.getClickedBlock();
+                Location loc = new Location(b.getWorld(), b.getX(), b.getY(), b.getZ());
                 if (b.getType()==Material.TNT) {
                     if (e.getItem().getType()==Material.BLAZE_POWDER) {
                         if (SND.gm.isPlaying(p)) {
-                            if (SND.tm.getTeam(p)==Team.RED&&b.getLocation()==SND.lh.getBlueBombSpawn().getBlock().getLocation()) {
-                                for (Player pl : Bukkit.getOnlinePlayers()) {
-                                    if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
-                                        pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
-                                    }
-                                }
-                                SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has been lit! They have 30 seconds to defuse it before it blows up!", true);
-                                SND.bm.setBlueFused(true);
-                                getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (SND.bm.isBlueFused()) {
-                                            SND.bm.setBlueFused(false);
-                                            Block b = SND.lh.getBlueBombSpawn().getBlock();
-                                            b.getWorld().playSound(b.getLocation(), Sound.EXPLODE, 1, 1);
-                                            SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has blown up! §cRed team §9wins!", true);
-                                            for (int i=1;i<4;i++) {
-                                                shootFirework(SND.lh.getRedSpawn());
-                                            }
-                                            SND.gm.endGame();
+                            if (SND.tm.getTeam(p)==Team.RED&&loc.equals(SND.lh.getBlueBombSpawn())) {
+                                if (!SND.bm.isBlueFused()) {
+                                    for (Player pl : Bukkit.getOnlinePlayers()) {
+                                        if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                                            pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
                                         }
                                     }
-                                }, 30 * 20);
-                            } else if (SND.tm.getTeam(p)==Team.BLUE&&b.getLocation()==SND.lh.getRedBombSpawn().getBlock().getLocation()) {
-                                for (Player pl : Bukkit.getOnlinePlayers()) {
-                                    if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
-                                        pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
-                                    }
-                                }
-                                SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has been lit! They have 30 seconds to defuse it before it blows up!", true);
-                                SND.bm.setRedFused(true);
-                                getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (SND.bm.isRedFused()) {
-                                            SND.bm.setRedFused(false);
-                                            Block b = SND.lh.getRedBombSpawn().getBlock();
-                                            b.getWorld().playSound(b.getLocation(), Sound.EXPLODE, 1, 1);
-                                            SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has blown up! Blue team wins!", true);
-                                            for (int i=1;i<4;i++) {
-                                                shootFirework(SND.lh.getBlueSpawn());
+                                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has been lit! They have 15 seconds to defuse it before it blows up!", true);
+                                    SND.bm.setBlueFused(true);
+                                    getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                                        int fuse = 15;
+                                        @Override
+                                        public void run() {
+                                            if (fuse!=-1) {
+                                                if (fuse!=0) {
+                                                    for (Player pl : Bukkit.getOnlinePlayers()) {
+                                                        if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                                                            pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
+                                                            BarAPI.setMessage(pl, "§9§l" + fuse + "§r§9...", 100);
+                                                        }
+                                                    }
+                                                    fuse--;
+                                                } else {
+                                                    if (SND.bm.isBlueFused()&&SND.gm.getPlaying().size()!=0) {
+                                                        SND.bm.setBlueFused(false);
+                                                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has blown up! §cRed team §9wins!", true);
+                                                        for (int i=1;i<4;i++) {
+                                                            shootFirework(SND.lh.getRedSpawn());
+                                                        }
+                                                        SND.gm.endGame();
+                                                        for (Player pl : Bukkit.getOnlinePlayers()) {
+                                                            if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                                                                BarAPI.removeBar(pl);
+                                                                pl.getWorld().playSound(pl.getLocation(), Sound.EXPLODE, 1, 1);
+                                                            }
+                                                        }
+                                                    }
+                                                    fuse--;
+                                                }
                                             }
-                                            SND.gm.endGame();
+                                        }
+                                    }, 0L, 20L);
+                                } else {
+                                    p.sendMessage(SND.TAG_BLUE + "This bomb is already fused.");
+                                }
+                            } else if (SND.tm.getTeam(p)==Team.BLUE&&loc.equals(SND.lh.getRedBombSpawn())) {
+                                if (!SND.bm.isRedFused()) {
+                                    for (Player pl : Bukkit.getOnlinePlayers()) {
+                                        if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                                            pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
                                         }
                                     }
-                                }, 30 * 20);
-                            } else if (SND.tm.getTeam(p)==Team.RED&&b.getLocation()==SND.lh.getRedBombSpawn().getBlock().getLocation()) {
+                                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has been lit! They have 15 seconds to defuse it before it blows up!", true);
+                                    SND.bm.setRedFused(true);
+                                    getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                                        int fuse = 15;
+                                        @Override
+                                        public void run() {
+                                            if (fuse!=-1) {
+                                                if(fuse!=0) {
+                                                    for (Player pl : Bukkit.getOnlinePlayers()) {
+                                                        if (SND.gm.isPlaying(pl)||SND.sm.isSpectator(pl)) {
+                                                            pl.getWorld().playSound(pl.getLocation(), Sound.FUSE, 1, 1);
+                                                            BarAPI.setMessage(pl, "§c§l" + fuse + "§r§c...", 100);
+                                                        }
+                                                    }
+                                                    fuse--;
+                                                } else {
+                                                    if (SND.bm.isRedFused()&&SND.gm.getPlaying().size()!=0) {
+                                                        SND.bm.setRedFused(false);
+                                                        SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has blown up! Blue team wins!", true);
+                                                        for (int i=1;i<4;i++) {
+                                                            shootFirework(SND.lh.getBlueSpawn());
+                                                        }
+                                                        SND.gm.endGame();
+                                                        for (Player pl : Bukkit.getOnlinePlayers()) {
+                                                            BarAPI.removeBar(pl);
+                                                            pl.getWorld().playSound(pl.getLocation(), Sound.EXPLODE, 1, 1);
+                                                        }
+                                                    }
+                                                    fuse--;
+                                                }
+                                            }
+                                        }
+                                    }, 0L, 20L);
+                                } else {
+                                    p.sendMessage(SND.TAG_BLUE + "This bomb is already fused.");
+                                }
+                            } else if (SND.tm.getTeam(p)==Team.RED&&loc.equals(SND.lh.getRedBombSpawn())) {
                                 if (SND.bm.isRedFused()) {
                                     SND.bm.setRedFused(false);
                                     SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team §9defused their bomb in time!", true);
                                     SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team §9wins!", true);
+                                    SND.gm.setEnded(true);
                                     getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                                         int num = 3;
                                         @Override
@@ -319,11 +413,12 @@ public class SND extends JavaPlugin implements Listener {
                                 } else {
                                     p.sendMessage(SND.TAG_BLUE + "Your bomb isn't fused yet.");
                                 }
-                            } else if (SND.tm.getTeam(p)==Team.BLUE&&b.getLocation()==SND.lh.getBlueBombSpawn().getBlock().getLocation()) {
+                            } else if (SND.tm.getTeam(p)==Team.BLUE&&loc.equals(SND.lh.getBlueBombSpawn())) {
                                 if (SND.bm.isBlueFused()) {
                                     SND.bm.setBlueFused(false);
                                     SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team defused their bomb in time!", true);
                                     SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team wins!", true);
+                                    SND.gm.setEnded(true);
                                     getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                                         int num = 3;
                                         @Override
@@ -343,7 +438,7 @@ public class SND extends JavaPlugin implements Listener {
                                     p.sendMessage(SND.TAG_BLUE + "Your bomb isn't fused yet.");
                                 }
                             } else {
-                                p.sendMessage("lol");
+                                p.sendMessage(SND.TAG_RED + "This is not a bomb.");
                             }
                         }
                     }
@@ -359,7 +454,8 @@ public class SND extends JavaPlugin implements Listener {
             Block b = e.getClickedBlock();
             if (b.getType()==Material.STONE_PLATE) {
                 if (SND.gm.isPlaying(p)) {
-                    p.setHealth(0.0);
+                    Entity tnt = p.getWorld().spawn(p.getLocation(), TNTPrimed.class);
+                    ((TNTPrimed)tnt).setFuseTicks(0);
                     b.setType(Material.AIR);
                 }
             }
@@ -375,7 +471,6 @@ public class SND extends JavaPlugin implements Listener {
                 if (SND.gm.isPlaying(p)) {
                     getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                         int num = 3;
-
                         @Override
                         public void run() {
                             if (num != -1) {
@@ -389,10 +484,54 @@ public class SND extends JavaPlugin implements Listener {
                                 }
                             }
                         }
-                    }, 0L, 20L);
+                    }, 0L, 10L);
                 }
             }
+        } else if (e.getEntity() instanceof Fireball) {
+            Fireball fireball = (Fireball) e.getEntity();
+            Entity tnt = fireball.getWorld().spawn(fireball.getLocation(), TNTPrimed.class);
+            ((TNTPrimed)tnt).setFuseTicks(0);
         }
+    }
+
+    @EventHandler
+    public void onBlazeRod(PlayerInteractEvent e) {
+        final Player p = e.getPlayer();
+        try {
+            if (e.getAction()==Action.LEFT_CLICK_AIR||e.getAction()==Action.LEFT_CLICK_BLOCK) {
+                if (e.getItem().getType()==Material.BLAZE_ROD) {
+                    if (SND.gm.isPlaying(p)) {
+                        if (canFireBall.containsKey(p)) {
+                            if (canFireBall.get(p)==true) {
+                                e.setCancelled(true);
+                                Entity ball = p.getWorld().spawn(p.getLocation().add(0, 3, 0), Fireball.class);
+                                ball.setVelocity(p.getLocation().getDirection().multiply(2));
+                                canFireBall.put(p, false);
+                                getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        canFireBall.put(p, true);
+                                    }
+                                }, 20 * 10);
+                            } else {
+                                p.sendMessage(SND.TAG_BLUE + "Please wait 10 seconds before using this again.");
+                            }
+                        } else {
+                            e.setCancelled(true);
+                            Entity ball = p.getWorld().spawn(p.getLocation().add(0, 3, 0), Fireball.class);
+                            ball.setVelocity(p.getLocation().getDirection().multiply(2));
+                            canFireBall.put(p, false);
+                            getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                                @Override
+                                public void run() {
+                                    canFireBall.put(p, true);
+                                }
+                            }, 20 * 10);
+                        }
+                    }
+                }
+            }
+        } catch (NullPointerException npe) {}
     }
 
     @EventHandler
@@ -432,6 +571,7 @@ public class SND extends JavaPlugin implements Listener {
             if (SND.tm.getBlue().size()==0) {
                 SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "Everyone in §9blue team §ais dead!", true);
                 SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "§cRed team §awins!", true);
+                SND.gm.setEnded(true);
                 getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                     int num = 3;
                     @Override
@@ -450,6 +590,7 @@ public class SND extends JavaPlugin implements Listener {
             } else if (SND.tm.getRed().size()==0) {
                 SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "Everyone in §cred team §ais dead!", true);
                 SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "§9Blue team §awins!", true);
+                SND.gm.setEnded(true);
                 getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                     int num = 3;
                     @Override
@@ -479,12 +620,36 @@ public class SND extends JavaPlugin implements Listener {
                     e.setCancelled(true);
                 } else if (SND.sm.isSpectator(damager)&&SND.gm.isPlaying(p)) {
                     e.setCancelled(true);
+                } else if (SND.tm.getTeam(p)==SND.tm.getTeam(damager)) {
+                    e.setCancelled(true);
+                } else if (SND.gm.isPlaying(p)&&!SND.gm.isPlaying(damager)) {
+                    e.setCancelled(true);
                 }
             }
         }
     }
 
-    private void shootFirework(Location loc) {
+    @EventHandler
+    public void onArrowHit(EntityDamageByEntityEvent e) {
+        if (e.getEntity() instanceof Player) {
+            Player p = (Player) e.getEntity();
+            if (e.getDamager() instanceof Arrow) {
+                Arrow arrow = (Arrow) e.getDamager();
+                if (arrow.getShooter() instanceof Player) {
+                    Player shooter = (Player) arrow.getShooter();
+                    if (SND.gm.isPlaying(p)&&SND.gm.isPlaying(shooter)) {
+                        if (SND.tm.getTeam(p)==SND.tm.getTeam(shooter)) {
+                            e.setCancelled(true);
+                        } else if (SND.sm.isSpectator(p)) {
+                            e.setCancelled(true);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static void shootFirework(Location loc) {
         Firework fw = (Firework) loc.getWorld().spawnEntity(loc, EntityType.FIREWORK);
         FireworkMeta fwm = fw.getFireworkMeta();
 
@@ -506,5 +671,128 @@ public class SND extends JavaPlugin implements Listener {
         fwm.addEffect(effect);
         fwm.setPower(1);
         fw.setFireworkMeta(fwm);
+    }
+
+    @EventHandler
+    public void onKitSelectorOpen(PlayerInteractEvent e) {
+        try {
+            Player p = e.getPlayer();
+            if (e.getItem().getType()==Material.NETHER_STAR&&e.getItem().getItemMeta().getDisplayName().equals("§bKit Selector")) {
+                if (SND.gm.isPlaying(p)) {
+                    SND.im.openKitSelector(p);
+                }
+            }
+        } catch (NullPointerException npe) {}
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent e) {
+        Player p = e.getPlayer();
+        LocationHandler lh = SND.lh;
+        if (p.isOp()) {
+            if (lh.getRedBombSpawn()==null||lh.getBlueBombSpawn()==null||lh.getRedSpawn()==null||lh.getBlueSpawn()==null||lh.getExitSpawn()==null) {
+                p.sendMessage(SND.TAG_BLUE + "All the spawns are not set.");
+            }
+        }
+        SND.gm.removePlayerFromGame(e.getPlayer());
+        SND.sm.removeSpectator(e.getPlayer());
+        SND.lm.removePlayerFromLobby(e.getPlayer());
+        e.setJoinMessage("");
+        if (SND.gm.getGameState()==GameState.LOBBY) {
+            if (SND.lm.getLobby().size()>=SND.gm.getPlayerLimit()) {
+                p.sendMessage(SND.TAG_RED + "This game is full.");
+            } else if (SND.lm.getLobby().size()<SND.gm.getPlayerLimit()) {
+                SND.lm.addPlayerToLobby(p);
+                SND.gm.updateJoinSign();
+                SND.lm.broadcastMessageInLobby(SND.TAG_GREEN + p.getName() + " joined the lobby. §2(§a" + SND.lm.getLobby().size() + "§2/§a" + SND.gm.getPlayerLimit() + "§2)");
+                if (SND.lm.getLobby().size()==1) {
+                    timer = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                        int num = 10;
+                        @Override
+                        public void run() {
+                            if (num!=-1) {
+                                if (num!=0) {
+                                    for (Player pl : SND.lm.getLobby()) {
+                                        pl.setExp(0);
+                                        pl.setLevel(num);
+                                    }
+                                    num--;
+                                } else {
+                                    if (SND.lm.getLobby().size()>=SND.lm.getMinPlayersToStart()) {
+                                        for (Player pl : Bukkit.getOnlinePlayers()) {
+                                            if (SND.lm.getLobby().contains(pl)) {
+                                                pl.setExp(0);
+                                                pl.setLevel(0);
+                                                pl.getWorld().playSound(pl.getLocation(), Sound.BURP, 1, 1);
+                                                Team team = SND.tm.getValidTeam();
+                                                SND.lm.removePlayerFromLobby(pl);
+                                                SND.gm.addPlayerToGame(pl, team);
+                                                SND.im.giveKitSelector(pl);
+                                            }
+                                        }
+                                        for (Player pl : Bukkit.getOnlinePlayers()) {
+                                            if (SND.gm.getPlaying().contains(pl)) {
+                                                if (SND.tm.getTeam(pl)==Team.RED) {
+                                                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + pl.getName() + " joined the §cRed team§9!");
+                                                } else if (SND.tm.getTeam(pl)==Team.BLUE) {
+                                                    SND.gm.broadcastMessageInGame(SND.TAG_BLUE + pl.getName() + " joined the Blue team!");
+                                                }
+                                            }
+                                        }
+                                        SND.lh.getRedBombSpawn().getBlock().setType(Material.TNT);
+                                        SND.lh.getBlueBombSpawn().getBlock().setType(Material.TNT);
+                                        SND.gm.setGameState(GameState.INGAME);
+                                        SND.gm.updateJoinSign();
+                                        num--;
+                                    } else if (SND.lm.getLobby().size()<SND.lm.getMinPlayersToStart()) {
+                                        SND.lm.broadcastMessageInLobby(SND.TAG_RED + "There weren't enough players to start. Restarting timer...");
+                                        num = 10;
+                                    } else if (SND.lm.getLobby().size()==0) {
+                                        num = 10;
+                                    }
+                                }
+                            }
+                        }
+                    }, 0L, 20L);
+                }
+            }
+        } else if (SND.gm.getGameState()==GameState.INGAME) {
+            if (SND.gm.getPlaying().size()<SND.gm.getPlayerLimit()) {
+                if (!SND.gm.isPlaying(p)) {
+                    SND.gm.removePlayerFromGame(p);
+                    SND.sm.setSpectator(p);
+                    SND.gm.broadcastMessageInGame(SND.TAG_GREEN + p.getName() + " is spectating the game.", true);
+                } else {
+                    p.sendMessage(SND.TAG_BLUE + "You are already in the game.");
+                }
+            } else if (SND.gm.getPlaying().size()==SND.gm.getPlayerLimit()) {
+                p.sendMessage(SND.TAG_RED + "This game is full.");
+            }
+        } else {
+            p.sendMessage(SND.TAG_RED + "This game is not joinable right now.");
+        }
+    }
+
+    @EventHandler
+    public void onLogin(PlayerLoginEvent e) {
+        if (Bukkit.getOnlinePlayers().length==SND.gm.getPlayerLimit()||SND.gm.getPlaying().size()==SND.gm.getPlayerLimit()) {
+            e.setResult(PlayerLoginEvent.Result.KICK_OTHER);
+            e.setKickMessage(" " + SND.TAG_GREEN + "\n" + "§cThe game is full!");
+        }
+    }
+
+    public static Location getTeamSpawn(Player p) {
+        Team team = SND.tm.getTeam(p);
+        if (team!=null) {
+            if (team==Team.RED) return SND.lh.getRedSpawn();
+            else if (team==Team.BLUE) return SND.lh.getBlueSpawn();
+        }
+        return SND.lh.getExitSpawn();
+    }
+
+    public static Location getTeamSpawn(Team team) {
+        if (team==Team.RED) return SND.lh.getRedSpawn();
+        else if (team==Team.BLUE) return SND.lh.getBlueSpawn();
+        return SND.lh.getExitSpawn();
     }
 }

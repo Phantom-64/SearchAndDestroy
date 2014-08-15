@@ -18,10 +18,14 @@ public class BlockListener implements Listener {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent e) {
-        if (SND.gm.isPlaying(e.getPlayer())||SND.lm.isInLobby(e.getPlayer())||SND.sm.isSpectator(e.getPlayer())) {
+        if (SND.gm.isPlaying(e.getPlayer())) {
             if (e.getBlock().getType()!=Material.STONE_PLATE) {
                 e.setCancelled(true);
+            } else {
+                SND.pressurePlateList.add(e.getBlock());
             }
+        } else if (SND.sm.isSpectator(e.getPlayer())||SND.lm.isInLobby(e.getPlayer())) {
+            e.setCancelled(true);
         }
     }
 

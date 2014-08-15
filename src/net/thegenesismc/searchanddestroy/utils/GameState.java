@@ -25,12 +25,13 @@ public enum GameState {
     INGAME("§8● In Game ●"),
     RESTARTING("§4&§l● Restarting ●");
 
-    private GameState(String label) {
+    private String label;
 
+    private GameState(String label) {
+        this.label = label;
     }
 
     public String getName() {
-        return
-                "";
+        return label;
     }
 }
