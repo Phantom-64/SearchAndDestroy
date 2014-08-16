@@ -21,6 +21,7 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
@@ -503,6 +504,17 @@ public class SND extends JavaPlugin implements Listener {
     }
 
     @EventHandler
+    public void onEnderPearl(PlayerTeleportEvent e) {
+        Player p = e.getPlayer();
+        if (e.getCause()==PlayerTeleportEvent.TeleportCause.ENDER_PEARL) {
+            if (SND.gm.isPlaying(p)) {
+                e.setCancelled(true);
+                p.teleport(e.getTo());
+            }
+        }
+    }
+
+    @EventHandler
     public void onBlazeRod(PlayerInteractEvent e) {
         final Player p = e.getPlayer();
         try {
@@ -513,7 +525,7 @@ public class SND extends JavaPlugin implements Listener {
                             if (canFireBall.get(p)==true) {
                                 e.setCancelled(true);
                                 Entity ball = p.getWorld().spawn(p.getLocation().add(0, 3, 0), Fireball.class);
-                                ball.setVelocity(p.getLocation().getDirection().multiply(2));
+                                ball.setVelocity(p.getLocation().getDirection().multiply(5));
                                 canFireBall.put(p, false);
                                 getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
                                     @Override

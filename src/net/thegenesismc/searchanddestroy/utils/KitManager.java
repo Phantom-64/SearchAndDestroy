@@ -16,19 +16,69 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * ---- Kits --------------------------------------------------------------------------------------
- - Assault - Iron sword - x2 Golden apple(s) - Iron armour
- - Juggernaut - Stone sword - slowness (/speed 0.5) - Iron armour (Protection 4)
- - Spy - Gold sword (Fire aspect 2) - X3 EnderPearls - Invisible - ( No armour )
- - Sniper - Wood sword - Bow (Power 2, Knock back 3, infinity) - Chain armour
- - Scout - Diamond axe - Fishing Rod - Speed 2 - Gold armour (Unbreaking 3)
+ * Kit: Assault
+ Cost: FREE
+ Armour: Iron Helmet, Iron Plate, Iron Leggings, Iron Boots
+ Weapon: Iron Sword (Sharpness I)
+ Other Items: 2 Golden Apples, Fuse
 
- > Explosive - Stone sword (Sharpness 1) - X6 Snowballs (Grenades) - x2 Stone Pressure plates - Chain armour
- > Wizard: Fire - Stone sword - Blaze rod (Fire | 2 tics) - Chain armour
- ---- Kits --------------------------------------------------------------------------------------
- Pressure plates = If an enemy team steps on one, they instantly die
 
- ALL Non-Donator kits expire within a month (This means they have to re-buy it every month)
+ Kit: Sniper
+ Cost: FREE
+ Armour: Iron Helmet, Iron Plate, Iron Leggings, Iron Boots
+ Weapon: Wood Sword
+ Other Items: Bow (Power 1, Knockback 2), 32 Arrows, Fuse
+
+
+ Kit: Banter
+ Cost: 50
+ Armour: Leather Helmet, Chain Plate, Leather Leggings, Leather Boots
+ Weapon: Wood Sword (Sharpness 2, Knockback 5)
+ Other Items: Fuse
+
+ Kit: Ghost
+ Cost: 200
+ Armour: None
+ Weapon: Gold Sword (Sharpness 2)
+ Other Items: x3 Enderpearls, Fuse
+
+
+ Kit: Scout
+ Cost: 250
+ Armour: Gold Helmet, Gold Plate, Gold Leggings, Gold Boots (Unbreaking 3)
+ Weapon: Diamond Axe
+ Other Items: Fishing rod, Fuse
+ **(Speed 2)**
+
+
+ Kit: Juggernaut
+ Cost: 400
+ Armour: Diamond Helmet, Diamond Plate, Diamond Leggings, Diamond Boots
+ Weapon: Stone Sword
+ Other Items: Fuse
+ **(Slowness)**
+
+
+ Kit: Assassin
+ Cost: 400
+ Armour: Chain Helmet, Iron Plate, Chain Leggings, Iron Boots
+ Weapon: Iron Sword (Poison 2)
+ Other Items: Fuse
+
+
+ Kit: Explosive
+ Cost: 600
+ Armour: Chain Helmet, Chain Plate, Chain Leggings, Chain Boots (Prot 1)
+ Weapon: Iron Sword
+ Other Items: x6 snowballs (Grenades), x2 Pressure plates (Landmines), Fuse
+
+
+ Kit: Wizard
+ Cost: 600
+ Armour: Chain Helmet, Chain Plate, Chain Leggings, Chain Boots (Prot 1)
+ Weapon: Iron Sword
+ Other Items: Blaze Rod (Staff), Fuse
+ **Shoots out a ball of fire every 5 seconds (You have to left click)**
  */
 
 public class KitManager {
