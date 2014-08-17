@@ -18,10 +18,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
@@ -118,6 +115,7 @@ public class SND extends JavaPlugin implements Listener {
     public static LobbyManager lm;
     public static SpectatorManager sm;
     public static BombManager bm;
+    public static CreditManager cm;
 
     @Override
     public void onEnable() {
@@ -133,6 +131,7 @@ public class SND extends JavaPlugin implements Listener {
         lm = new LobbyManager(this);
         sm = new SpectatorManager(this);
         bm = new BombManager(this);
+        cm = new CreditManager(this);
         tm.setupTeams();
         gm.setGameState(GameState.LOBBY);
         SND.gm.updateJoinSign();
@@ -195,6 +194,13 @@ public class SND extends JavaPlugin implements Listener {
                 } else if (args[0].equalsIgnoreCase("setbombspawn")) {
                     CommandSetBombSpawn.execute(p, args);
                 }
+            } else {
+                sender.sendMessage(ChatColor.RED + "Only players can use this command.");
+            }
+        } else if (label.equalsIgnoreCase("credits")||label.equalsIgnoreCase("cr")) {
+            if (sender instanceof Player) {
+                Player p = (Player) sender;
+                p.sendMessage(SND.TAG_BLUE + "§bYou have §0[§a" + SND.cm.getCredits(p) + "§0] §bcredits!");
             } else {
                 sender.sendMessage(ChatColor.RED + "Only players can use this command.");
             }
@@ -313,7 +319,7 @@ public class SND extends JavaPlugin implements Listener {
                                         SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team§b's bomb has been lit! They have 15 seconds to defuse it before it blows up!", true);
                                         SND.bm.setBlueFused(true);
                                         getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-                                            int fuse = 15;
+                                            int fuse = 30;
                                             @Override
                                             public void run() {
                                                 if (fuse!=-1) {
@@ -362,7 +368,7 @@ public class SND extends JavaPlugin implements Listener {
                                         SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§b's bomb has been lit! They have 15 seconds to defuse it before it blows up!", true);
                                         SND.bm.setRedFused(true);
                                         getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-                                            int fuse = 15;
+                                            int fuse = 30;
                                             @Override
                                             public void run() {
                                                 if (fuse!=-1) {
@@ -795,19 +801,13 @@ public class SND extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onLogin(PlayerLoginEvent e) {
-        if (Bukkit.getOnlinePlayers().length==SND.gm.getPlayerLimit()||SND.gm.getPlaying().size()==SND.gm.getPlayerLimit()) {
+        if (SND.gm.getGameState()==GameState.LOBBY&&SND.lm.getLobby().size()>=SND.gm.getPlayerLimit()) {
+            e.setResult(PlayerLoginEvent.Result.KICK_OTHER);
+            e.setKickMessage(" " + SND.TAG_GREEN + "\n" + "§cThe lobby is full!");
+        } else if (SND.gm.getGameState()==GameState.INGAME&&Bukkit.getOnlinePlayers().length>=SND.gm.getPlayerLimit()) {
             e.setResult(PlayerLoginEvent.Result.KICK_OTHER);
             e.setKickMessage(" " + SND.TAG_GREEN + "\n" + "§cThe game is full!");
         }
-    }
-
-    public static Location getTeamSpawn(Player p) {
-        Team team = SND.tm.getTeam(p);
-        if (team!=null) {
-            if (team==Team.RED) return SND.lh.getRedSpawn();
-            else if (team==Team.BLUE) return SND.lh.getBlueSpawn();
-        }
-        return SND.lh.getExitSpawn();
     }
 
     public static Location getTeamSpawn(Team team) {
