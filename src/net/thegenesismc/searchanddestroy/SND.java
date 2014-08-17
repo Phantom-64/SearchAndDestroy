@@ -172,6 +172,63 @@ public class SND extends JavaPlugin implements Listener {
         SND.gm.setGameState(GameState.LOBBY);
         SND.gm.updateJoinSign();
         SND.gm.setEnded(false);
+        
+        /*
+                     SQL STUFF
+        */
+        
+        try {
+			if (connection != null && connection.isClosed())
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		public synchronized static void openConnection() {
+			try{				
+				connection = DriverManager.getConnection("jdbc:mysql://192.210.232.226/mc63598", "mc63598", "78c7a1af2e");
+								
+			}catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		public synchronized static void closeConnection() {
+			try{
+				connection.close();
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		
+		public synchronized static boolean playerDataContainsPlayer(String uuid) {
+			try{
+				
+				PreparedStatement sql = connection.prepareStatement("SELECT * FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				ResultSet res = sql.executeQuery();
+				boolean containsPlayer = res.next();
+				
+				sql.close();
+				res.close();
+				
+				return containsPlayer;
+				
+			}catch(Exception e) {
+				e.printStackTrace();
+				return false;
+			}
+			
+			
+		}
+        
+        
+        
+        
+        
+        
     }
 
     private void registerListeners(Listener... listeners) {
@@ -207,6 +264,96 @@ public class SND extends JavaPlugin implements Listener {
         } else if (label.equalsIgnoreCase("p")) {
             Player p = (Player) sender;
             p.teleport(p.getLocation().add(0, 150, 0));
+        } else if (label.equalsIgnoreCase("stats")) {
+            Player p = (Player) sender;
+            
+            
+            
+            
+            openConnection();
+		try {
+			String uuid = "" + p.getUniqueId();
+			
+			int previousWins = 0;
+			int previousLoses = 0;
+			int previousKills = 0;
+			int previousDeaths = 0;
+			int previousCredits = 0;
+
+			
+			if (playerDataContainsPlayer(uuid)) {
+			 
+				PreparedStatement winsSQL = connection.prepareStatement("SELECT wins FROM `snd` WHERE player=?;");
+				PreparedStatement losesSQL = connection.prepareStatement("SELECT loses FROM `snd` WHERE player=?;");
+				PreparedStatement killsSQL = connection.prepareStatement("SELECT kills FROM `snd` WHERE player=?;");
+				PreparedStatement deathsSQL = connection.prepareStatement("SELECT deaths FROM `snd` WHERE player=?;");
+				PreparedStatement creditsSQL = connection.prepareStatement("SELECT credits FROM `snd` WHERE player=?;");
+
+				winsSQL.setString(1, uuid);
+				losesSQL.setString(1, uuid);
+				killsSQL.setString(1, uuid);
+				deathsSQL.setString(1, uuid);
+				creditsSQL.setString(1, uuid);
+
+				
+				ResultSet winsRes = winsSQL.executeQuery();
+				winsRes.next();
+				
+				ResultSet losesRes = losesSQL.executeQuery();
+				losesRes.next();
+				
+				ResultSet killsRes = killsSQL.executeQuery();
+				killsRes.next();
+				
+				ResultSet deathsRes = deathsSQL.executeQuery();
+				deathsRes.next();
+				
+				ResultSet creditsRes = creditsSQL.executeQuery();
+				creditsRes.next();
+				
+				
+				previousWins = result.getInt("wins");
+				previousLoses = result.getInt("loses");
+				previousKills = result.getInt("kills");
+				previousDeaths = result.getInt("deaths");
+				previousCredits = result.getInt("credits");
+				
+				
+				p.sendMessage(ChatColor.GRAY + "" + strike + "-------------------------------------------------");
+				p.sendMessage(ChatColor.BLUE + "Wins"ChatColor.AQUA + " *" + ChatColor.DRAK_AQUA + "» " + ChatColor.YELLOW + previousWins);
+				p.sendMessage(ChatColor.BLUE + "Loses"ChatColor.AQUA + " *" + ChatColor.DRAK_AQUA + "» " + ChatColor.YELLOW + previousLoses);
+				p.sendMessage(ChatColor.BLUE + "Kills"ChatColor.AQUA + " *" + ChatColor.DRAK_AQUA + "» " + ChatColor.YELLOW + previousKills);
+				p.sendMessage(ChatColor.BLUE + "Deaths"ChatColor.AQUA + " *" + ChatColor.DRAK_AQUA + "» " + ChatColor.YELLOW + previousDeaths);
+				p.sendMessage(ChatColor.BLUE + "Credits"ChatColor.AQUA + " *" + ChatColor.DRAK_AQUA + "» " + ChatColor.YELLOW + previousCredits);
+				p.sendMessage(" ");
+				
+				// Dont Change the p.sendMessage 's please
+				
+				
+				
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+            
+            
+            
+            
+            
+            
+            
         }
         return true;
     }
@@ -335,6 +482,105 @@ public class SND extends JavaPlugin implements Listener {
                                                         if (SND.bm.isBlueFused()&&SND.gm.getPlaying().size()!=0) {
                                                             SND.bm.setBlueFused(false);
                                                             SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team's bomb has blown up! §cRed team §9wins!", true);
+                                                            
+          for (Player pl : Bukkit.getOnlinePlayers()) {
+                  if (SND.gm.getPlaying().contains(pl)) {
+                   if (SND.tm.getTeam(pl)==Team.BLUE) {
+                    
+                    openConnection();
+		try {
+			String uuid = "" + pl.getUniqueId();
+			int previousThing = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT loses FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				previousThing = result.getInt("loses");
+				
+				PreparedStatement losesUpdate = connection.prepareStatement("UPDATE `snd` set loses=? WHERE player=?;"); 
+								losesUpdate.setInt(1, previousThing + 1);
+								losesUpdate.setString(2, uuid);
+								losesUpdate.executeUpdate();
+								
+				
+				losesUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+                    
+                    
+                    
+                    } else if (SND.tm.getTeam(pl)==Team.RED) {
+                     
+                     openConnection();
+		try {
+			String uuid = "" + pl.getUniqueId();
+			int previousThing = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT wins FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				previousThing = result.getInt("wins");
+				
+				PreparedStatement winsUpdate = connection.prepareStatement("UPDATE `snd` set wins=? WHERE player=?;"); 
+								winsUpdate.setInt(1, previousThing + 1);
+								winsUpdate.setString(2, uuid);
+								winsUpdate.executeUpdate();
+								
+				
+				winsUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+                     
+                     
+                     
+                    }
+                  }
+                 }
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
                                                             for (int i=1;i<4;i++) {
                                                                 shootFirework(SND.lh.getRedSpawn());
                                                             }
@@ -384,6 +630,102 @@ public class SND extends JavaPlugin implements Listener {
                                                         if (SND.bm.isRedFused()&&SND.gm.getPlaying().size()!=0) {
                                                             SND.bm.setRedFused(false);
                                                             SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team§9's bomb has blown up! Blue team wins!", true);
+                                                            
+                                                            
+     for (Player pl : Bukkit.getOnlinePlayers()) {
+                  if (SND.gm.getPlaying().contains(pl)) {
+                   if (SND.tm.getTeam(pl)==Team.RED) {
+                    
+                    openConnection();
+		try {
+			String uuid = "" + pl.getUniqueId();
+			int previousThing = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT loses FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				previousThing = result.getInt("loses");
+				
+				PreparedStatement losesUpdate = connection.prepareStatement("UPDATE `snd` set loses=? WHERE player=?;"); 
+								losesUpdate.setInt(1, previousThing + 1);
+								losesUpdate.setString(2, uuid);
+								losesUpdate.executeUpdate();
+								
+				
+				losesUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+                    
+                    
+                    
+                    } else if (SND.tm.getTeam(pl)==Team.BLUE) {
+                     
+                     openConnection();
+		try {
+			String uuid = "" + pl.getUniqueId();
+			int previousThing = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT wins FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				previousThing = result.getInt("wins");
+				
+				PreparedStatement winsUpdate = connection.prepareStatement("UPDATE `snd` set wins=? WHERE player=?;"); 
+								winsUpdate.setInt(1, previousThing + 1);
+								winsUpdate.setString(2, uuid);
+								winsUpdate.executeUpdate();
+								
+				
+				winsUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+                     
+                     
+                     
+                    }
+                  }
+                 }
+                                                            
+                                                            
+                                                            
                                                             for (int i=1;i<4;i++) {
                                                                 shootFirework(SND.lh.getBlueSpawn());
                                                             }
@@ -410,6 +752,100 @@ public class SND extends JavaPlugin implements Listener {
                                     SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team §9defused their bomb in time!", true);
                                     SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "§cRed team §9wins!", true);
                                     SND.gm.setEnded(true);
+                                    
+   for (Player pl : Bukkit.getOnlinePlayers()) {
+                  if (SND.gm.getPlaying().contains(pl)) {
+                   if (SND.tm.getTeam(pl)==Team.BLUE) {
+                    
+                    openConnection();
+		try {
+			String uuid = "" + pl.getUniqueId();
+			int previousThing = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT loses FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				previousThing = result.getInt("loses");
+				
+				PreparedStatement losesUpdate = connection.prepareStatement("UPDATE `snd` set loses=? WHERE player=?;"); 
+								losesUpdate.setInt(1, previousThing + 1);
+								losesUpdate.setString(2, uuid);
+								losesUpdate.executeUpdate();
+								
+				
+				losesUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+                    
+                    
+                    
+                    } else if (SND.tm.getTeam(pl)==Team.RED) {
+                     
+                     openConnection();
+		try {
+			String uuid = "" + pl.getUniqueId();
+			int previousThing = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT wins FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				previousThing = result.getInt("wins");
+				
+				PreparedStatement winsUpdate = connection.prepareStatement("UPDATE `snd` set wins=? WHERE player=?;"); 
+								winsUpdate.setInt(1, previousThing + 1);
+								winsUpdate.setString(2, uuid);
+								winsUpdate.executeUpdate();
+								
+				
+				winsUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+                     
+                     
+                     
+                    }
+                  }
+                 }
+                                    
+                                    
                                     getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                                         int num = 3;
                                         @Override
@@ -434,6 +870,102 @@ public class SND extends JavaPlugin implements Listener {
                                     SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team defused their bomb in time!", true);
                                     SND.gm.broadcastMessageInGame(SND.TAG_BLUE + "Blue team wins!", true);
                                     SND.gm.setEnded(true);
+                                    
+                                    
+                                    
+                                    for (Player pl : Bukkit.getOnlinePlayers()) {
+                  if (SND.gm.getPlaying().contains(pl)) {
+                   if (SND.tm.getTeam(pl)==Team.RED) {
+                    
+                    openConnection();
+		try {
+			String uuid = "" + pl.getUniqueId();
+			int previousThing = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT loses FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				previousThing = result.getInt("loses");
+				
+				PreparedStatement losesUpdate = connection.prepareStatement("UPDATE `snd` set loses=? WHERE player=?;"); 
+								losesUpdate.setInt(1, previousThing + 1);
+								losesUpdate.setString(2, uuid);
+								losesUpdate.executeUpdate();
+								
+				
+				losesUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+                    
+                    
+                    
+                    } else if (SND.tm.getTeam(pl)==Team.BLUE) {
+                     
+                     openConnection();
+		try {
+			String uuid = "" + pl.getUniqueId();
+			int previousThing = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT wins FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				previousThing = result.getInt("wins");
+				
+				PreparedStatement winsUpdate = connection.prepareStatement("UPDATE `snd` set wins=? WHERE player=?;"); 
+								winsUpdate.setInt(1, previousThing + 1);
+								winsUpdate.setString(2, uuid);
+								winsUpdate.executeUpdate();
+								
+				
+				winsUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+                     
+                     
+                     
+                    }
+                  }
+                 }
+                 
+                 
                                     getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                                         int num = 3;
                                         @Override
@@ -576,6 +1108,118 @@ public class SND extends JavaPlugin implements Listener {
     @EventHandler
     public void onDeath(PlayerDeathEvent e) {
         Player p = e.getEntity();
+        
+        
+        
+        /*
+                 SQL STUFF
+        */
+        
+        openConnection();
+		try {
+			String uuid = "" + p.getUniqueId();
+			int previousKills = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT kills FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				previousKills = result.getInt("kills");
+				
+				PreparedStatement killsUpdate = connection.prepareStatement("UPDATE `snd` set kills=? WHERE player=?;"); 
+								killsUpdate.setInt(1, previousKills + 1);
+								killsUpdate.setString(2, uuid);
+								killsUpdate.executeUpdate();
+								
+				
+				killsUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+		
+		
+		
+		
+		
+		
+		// Death SQL
+		
+		openConnection();
+		try {
+			String uuid = "" + p.getKiller().getUniqueId();
+			int previousDeaths = 0;
+		 int previousCreds = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT deaths FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				PreparedStatement credSQL = connection.prepareStatement("SELECT credits FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				ResultSet credRes = credSQL.executeQuery();
+				credRes.next();
+				
+				
+				previousDeaths = result.getInt("deaths");				
+				previousCreds = result.getInt("credits");
+				
+				PreparedStatement deathsUpdate = connection.prepareStatement("UPDATE `snd` set death=? WHERE player=?;"); 
+								killsUpdate.setInt(1, previousDeaths + 1);
+								killsUpdate.setString(2, uuid);
+								killsUpdate.executeUpdate();
+				
+				PreparedStatement credUpdate = connection.prepareStatement("UPDATE `snd` set credits=? WHERE player=?;"); 
+								credUpdate.setInt(1, previousCreds + 10);
+								credUpdate.setString(2, uuid);
+								credUpdate.executeUpdate();
+								
+								
+				
+				deathsUpdate.close();
+				credUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+        
+        
+        
+        
+        //------------------
+        
         if (SND.gm.isPlaying(p)) {
             e.getDrops().clear();
             if (p.getKiller() instanceof Player) {
@@ -598,6 +1242,101 @@ public class SND extends JavaPlugin implements Listener {
                 SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "Everyone in §9blue team §ais dead!", true);
                 SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "§cRed team §awins!", true);
                 SND.gm.setEnded(true);
+                
+                
+  for (Player pl : Bukkit.getOnlinePlayers()) {
+                  if (SND.gm.getPlaying().contains(pl)) {
+                   if (SND.tm.getTeam(pl)==Team.BLUE) {
+                    
+                    openConnection();
+		try {
+			String uuid = "" + pl.getUniqueId();
+			int previousThing = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT loses FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				previousThing = result.getInt("loses");
+				
+				PreparedStatement losesUpdate = connection.prepareStatement("UPDATE `snd` set loses=? WHERE player=?;"); 
+								losesUpdate.setInt(1, previousThing + 1);
+								losesUpdate.setString(2, uuid);
+								losesUpdate.executeUpdate();
+								
+				
+				losesUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+                    
+                    
+                    
+                    } else if (SND.tm.getTeam(pl)==Team.RED) {
+                     
+                     openConnection();
+		try {
+			String uuid = "" + pl.getUniqueId();
+			int previousThing = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT wins FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				previousThing = result.getInt("wins");
+				
+				PreparedStatement winsUpdate = connection.prepareStatement("UPDATE `snd` set wins=? WHERE player=?;"); 
+								winsUpdate.setInt(1, previousThing + 1);
+								winsUpdate.setString(2, uuid);
+								winsUpdate.executeUpdate();
+								
+				
+				winsUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+                     
+                     
+                     
+                    }
+                  }
+                 }
+                 
+                 
                 getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                     int num = 3;
                     @Override
@@ -617,6 +1356,102 @@ public class SND extends JavaPlugin implements Listener {
                 SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "Everyone in §cred team §ais dead!", true);
                 SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "§9Blue team §awins!", true);
                 SND.gm.setEnded(true);
+                
+                
+                for (Player pl : Bukkit.getOnlinePlayers()) {
+                  if (SND.gm.getPlaying().contains(pl)) {
+                   if (SND.tm.getTeam(pl)==Team.RED) {
+                    
+                    openConnection();
+		try {
+			String uuid = "" + pl.getUniqueId();
+			int previousThing = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT loses FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				previousThing = result.getInt("loses");
+				
+				PreparedStatement losesUpdate = connection.prepareStatement("UPDATE `snd` set loses=? WHERE player=?;"); 
+								losesUpdate.setInt(1, previousThing + 1);
+								losesUpdate.setString(2, uuid);
+								losesUpdate.executeUpdate();
+								
+				
+				losesUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+                    
+                    
+                    
+                    } else if (SND.tm.getTeam(pl)==Team.BLUE) {
+                     
+                     openConnection();
+		try {
+			String uuid = "" + pl.getUniqueId();
+			int previousThing = 0;
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT wins FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				previousThing = result.getInt("wins");
+				
+				PreparedStatement winsUpdate = connection.prepareStatement("UPDATE `snd` set wins=? WHERE player=?;"); 
+								winsUpdate.setInt(1, previousThing + 1);
+								winsUpdate.setString(2, uuid);
+								winsUpdate.executeUpdate();
+								
+				
+				winsUpdate.close();
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+		closeConnection();
+		}
+                     
+                     
+                     
+                    }
+                  }
+                 }
+                 
+                 
+                 
                 getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                     int num = 3;
                     @Override
@@ -714,6 +1549,43 @@ public class SND extends JavaPlugin implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
+        
+        /*
+                    SQL STUUF
+        */
+        
+        openConnection();
+		try {
+			String uuid = "" + player.getUniqueId();
+			
+			if (playerDataContainsPlayer(uuid)) {
+				PreparedStatement sql = connection.prepareStatement("SELECT wins FROM `snd` WHERE player=?;");
+				sql.setString(1, uuid);
+				
+				ResultSet result = sql.executeQuery();
+				result.next();
+				
+				
+				sql.close();
+				result.close();
+				
+			} else {
+				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+				newPlayer.setString(1, uuid);
+				newPlayer.execute();
+				newPlayer.close();
+				
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			closeConnection();
+		}
+        
+        
+        //----------------------------
+        
         LocationHandler lh = SND.lh;
         if (p.isOp()) {
             if (lh.getRedBombSpawn()==null||lh.getBlueBombSpawn()==null||lh.getRedSpawn()==null||lh.getBlueSpawn()==null||lh.getExitSpawn()==null) {
