@@ -23,6 +23,12 @@ import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import java.util.*;
 
 /**
@@ -105,6 +111,8 @@ public class SND extends JavaPlugin implements Listener {
 
     private Map<Player, Boolean> canFireBall = new HashMap<Player, Boolean>();
     public static List<Block> pressurePlateList = new ArrayList<Block>();
+    
+    public static Connection connection;
 
     //Too many managers :O
     public static LocationHandler lh;
