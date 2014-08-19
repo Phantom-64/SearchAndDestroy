@@ -328,11 +328,11 @@ public class SND extends JavaPlugin implements Listener {
 				
 				
 				p.sendMessage(ChatColor.GRAY + "" + strike + "-------------------------------------------------");
-				p.sendMessage(ChatColor.BLUE + "Wins"ChatColor.AQUA + " *" + ChatColor.DRAK_AQUA + "» " + ChatColor.YELLOW + previousWins);
-				p.sendMessage(ChatColor.BLUE + "Loses"ChatColor.AQUA + " *" + ChatColor.DRAK_AQUA + "» " + ChatColor.YELLOW + previousLoses);
-				p.sendMessage(ChatColor.BLUE + "Kills"ChatColor.AQUA + " *" + ChatColor.DRAK_AQUA + "» " + ChatColor.YELLOW + previousKills);
-				p.sendMessage(ChatColor.BLUE + "Deaths"ChatColor.AQUA + " *" + ChatColor.DRAK_AQUA + "» " + ChatColor.YELLOW + previousDeaths);
-				p.sendMessage(ChatColor.BLUE + "Credits"ChatColor.AQUA + " *" + ChatColor.DRAK_AQUA + "» " + ChatColor.YELLOW + previousCredits);
+				p.sendMessage(ChatColor.BLUE + "Wins" + ChatColor.AQUA + " *" + ChatColor.DARK_AQUA + "» " + ChatColor.YELLOW + previousWins);
+				p.sendMessage(ChatColor.BLUE + "Loses" + ChatColor.AQUA + " *" + ChatColor.DARK_AQUA + "» " + ChatColor.YELLOW + previousLoses);
+				p.sendMessage(ChatColor.BLUE + "Kills" + ChatColor.AQUA + " *" + ChatColor.DARK_AQUA + "» " + ChatColor.YELLOW + previousKills);
+				p.sendMessage(ChatColor.BLUE + "Deaths" + ChatColor.AQUA + " *" + ChatColor.DARK_AQUA + "» " + ChatColor.YELLOW + previousDeaths);
+				p.sendMessage(ChatColor.BLUE + "Credits" + ChatColor.AQUA + " *" + ChatColor.DARK_AQUA + "» " + ChatColor.YELLOW + previousCredits);
 				p.sendMessage(" ");
 				
 				// Dont Change the p.sendMessage 's please
@@ -798,8 +798,8 @@ public class SND extends JavaPlugin implements Listener {
 				
 			}
 			
-		}catch(Exception e) {
-			e.printStackTrace();
+		}catch(Exception ex) {
+			ex.printStackTrace();
 		} finally {
 		closeConnection();
 		}
@@ -841,8 +841,8 @@ public class SND extends JavaPlugin implements Listener {
 				
 			}
 			
-		}catch(Exception e) {
-			e.printStackTrace();
+		}catch(Exception exc) {
+			exc.printStackTrace();
 		} finally {
 		closeConnection();
 		}
@@ -918,8 +918,8 @@ public class SND extends JavaPlugin implements Listener {
 				
 			}
 			
-		}catch(Exception e) {
-			e.printStackTrace();
+		}catch(Exception excp) {
+			excp.printStackTrace();
 		} finally {
 		closeConnection();
 		}
@@ -961,8 +961,8 @@ public class SND extends JavaPlugin implements Listener {
 				
 			}
 			
-		}catch(Exception e) {
-			e.printStackTrace();
+		}catch(Exception excpt) {
+			excpt.printStackTrace();
 		} finally {
 		closeConnection();
 		}
@@ -1156,8 +1156,8 @@ public class SND extends JavaPlugin implements Listener {
 				
 			}
 			
-		}catch(Exception e) {
-			e.printStackTrace();
+		}catch(Exception exceptn) {
+			exceptn.printStackTrace();
 		} finally {
 		closeConnection();
 		}
@@ -1217,8 +1217,8 @@ public class SND extends JavaPlugin implements Listener {
 				
 			}
 			
-		}catch(Exception e) {
-			e.printStackTrace();
+		}catch(Exception exc) {
+			exc.printStackTrace();
 		} finally {
 		closeConnection();
 		}
@@ -1289,8 +1289,8 @@ public class SND extends JavaPlugin implements Listener {
 				
 			}
 			
-		}catch(Exception e) {
-			e.printStackTrace();
+		}catch(Exception exception) {
+			exception.printStackTrace();
 		} finally {
 		closeConnection();
 		}
@@ -1332,8 +1332,8 @@ public class SND extends JavaPlugin implements Listener {
 				
 			}
 			
-		}catch(Exception e) {
-			e.printStackTrace();
+		}catch(Exception exc) {
+			exc.printStackTrace();
 		} finally {
 		closeConnection();
 		}
@@ -1403,8 +1403,8 @@ public class SND extends JavaPlugin implements Listener {
 				
 			}
 			
-		}catch(Exception e) {
-			e.printStackTrace();
+		}catch(Exception exception) {
+			exception.printStackTrace();
 		} finally {
 		closeConnection();
 		}
@@ -1446,8 +1446,8 @@ public class SND extends JavaPlugin implements Listener {
 				
 			}
 			
-		}catch(Exception e) {
-			e.printStackTrace();
+		}catch(Exception exc) {
+			exc.printStackTrace();
 		} finally {
 		closeConnection();
 		}
@@ -1564,7 +1564,7 @@ public class SND extends JavaPlugin implements Listener {
         
         openConnection();
 		try {
-			String uuid = "" + player.getUniqueId();
+			String uuid = "" + p.getUniqueId();
 			
 			if (playerDataContainsPlayer(uuid)) {
 				PreparedStatement sql = connection.prepareStatement("SELECT wins FROM `snd` WHERE player=?;");
@@ -1585,8 +1585,8 @@ public class SND extends JavaPlugin implements Listener {
 				
 			}
 			
-		}catch(Exception e) {
-			e.printStackTrace();
+		}catch(Exception exc) {
+			exc.printStackTrace();
 		} finally {
 			closeConnection();
 		}
