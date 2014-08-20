@@ -237,7 +237,7 @@ public class SND extends JavaPlugin implements Listener {
         
         
         
-    }
+    
 
     private void registerListeners(Listener... listeners) {
         for (Listener listener : listeners) {
@@ -320,14 +320,14 @@ public class SND extends JavaPlugin implements Listener {
 				creditsRes.next();
 				
 				
-				previousWins = result.getInt("wins");
-				previousLoses = result.getInt("loses");
-				previousKills = result.getInt("kills");
-				previousDeaths = result.getInt("deaths");
-				previousCredits = result.getInt("credits");
+				previousWins = winRes.getInt("wins");
+				previousLoses = losesRes.getInt("loses");
+				previousKills = killsRes.getInt("kills");
+				previousDeaths = deathsRes.getInt("deaths");
+				previousCredits = creditsRes.getInt("credits");
 				
 				
-				p.sendMessage(ChatColor.GRAY + "" + strike + "-------------------------------------------------");
+				p.sendMessage(ChatColor.GRAY + "" + ChatColor.STRIKETHROUGH + "-------------------------------------------------");
 				p.sendMessage(ChatColor.BLUE + "Wins" + ChatColor.AQUA + " *" + ChatColor.DARK_AQUA + "» " + ChatColor.YELLOW + previousWins);
 				p.sendMessage(ChatColor.BLUE + "Loses" + ChatColor.AQUA + " *" + ChatColor.DARK_AQUA + "» " + ChatColor.YELLOW + previousLoses);
 				p.sendMessage(ChatColor.BLUE + "Kills" + ChatColor.AQUA + " *" + ChatColor.DARK_AQUA + "» " + ChatColor.YELLOW + previousKills);
@@ -338,9 +338,21 @@ public class SND extends JavaPlugin implements Listener {
 				// Dont Change the p.sendMessage 's please
 				
 				
+				winsSQL.close();
+				losesSQL.close();
+				killsSQL.close(); 
+				deathsSQL.close();
+				creditsSQL.close();
 				
-				sql.close();
-				result.close();
+				 winsRes.close();
+				
+				 losesRes.close();
+				
+				 killsRes.close();
+				
+				 deathsRes.close();
+				
+				 creditsRes.close();
 				
 			} else {
 				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
@@ -1193,9 +1205,9 @@ public class SND extends JavaPlugin implements Listener {
 				previousCreds = result.getInt("credits");
 				
 				PreparedStatement deathsUpdate = connection.prepareStatement("UPDATE `snd` set death=? WHERE player=?;"); 
-								killsUpdate.setInt(1, previousDeaths + 1);
-								killsUpdate.setString(2, uuid);
-								killsUpdate.executeUpdate();
+								deathsUpdate.setInt(1, previousDeaths + 1);
+								deathsUpdate.setString(2, uuid);
+								deathsUpdate.executeUpdate();
 				
 				PreparedStatement credUpdate = connection.prepareStatement("UPDATE `snd` set credits=? WHERE player=?;"); 
 								credUpdate.setInt(1, previousCreds + 10);
