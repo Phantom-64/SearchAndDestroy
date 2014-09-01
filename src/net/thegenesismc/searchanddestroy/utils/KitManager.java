@@ -16,14 +16,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Kit: Assault
+ * Kit: Assault Done
  Cost: FREE
  Armour: Iron Helmet, Iron Plate, Iron Leggings, Iron Boots
  Weapon: Iron Sword (Sharpness I)
  Other Items: 2 Golden Apples, Fuse
 
 
- Kit: Sniper
+ Kit: Sniper Done
  Cost: FREE
  Armour: Iron Helmet, Iron Plate, Iron Leggings, Iron Boots
  Weapon: Wood Sword
@@ -43,7 +43,7 @@ import java.util.Map;
  Other Items: x3 Enderpearls, Fuse
 
 
- Kit: Scout
+ Kit: Scout Done
  Cost: 250
  Armour: Gold Helmet, Gold Plate, Gold Leggings, Gold Boots (Unbreaking 3)
  Weapon: Diamond Axe
@@ -51,7 +51,7 @@ import java.util.Map;
  **(Speed 2)**
 
 
- Kit: Juggernaut
+ Kit: Juggernaut Done
  Cost: 400
  Armour: Diamond Helmet, Diamond Plate, Diamond Leggings, Diamond Boots
  Weapon: Stone Sword
@@ -59,21 +59,21 @@ import java.util.Map;
  **(Slowness)**
 
 
- Kit: Assassin
+ Kit: Assassin Done
  Cost: 400
  Armour: Chain Helmet, Iron Plate, Chain Leggings, Iron Boots
  Weapon: Iron Sword (Poison 2)
  Other Items: Fuse
 
 
- Kit: Explosive
+ Kit: Explosive Done
  Cost: 600
  Armour: Chain Helmet, Chain Plate, Chain Leggings, Chain Boots (Prot 1)
  Weapon: Iron Sword
  Other Items: x6 snowballs (Grenades), x2 Pressure plates (Landmines), Fuse
 
 
- Kit: Wizard
+ Kit: Wizard Done
  Cost: 600
  Armour: Chain Helmet, Chain Plate, Chain Leggings, Chain Boots (Prot 1)
  Weapon: Iron Sword
@@ -102,7 +102,7 @@ public class KitManager {
         for (PotionEffect effect : p.getActivePotionEffects()) {
             p.removePotionEffect(effect.getType());
         }
-        if (kit==Kit.ASSAULT) {
+        if (kit==Kit.ASSAULT) { //Done
             inv.setChestplate(new ItemStack(Material.IRON_CHESTPLATE, 1));
             inv.setLeggings(new ItemStack(Material.IRON_LEGGINGS, 1));
             inv.setBoots(new ItemStack(Material.IRON_BOOTS, 1));
@@ -114,16 +114,10 @@ public class KitManager {
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
             inv.setItem(8, fuse);
-        } else if (kit==Kit.JUGGERNAUT) {
-            ItemStack chest = new ItemStack(Material.IRON_CHESTPLATE, 1);
-            chest.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-            ItemStack leggings = new ItemStack(Material.IRON_LEGGINGS, 1);
-            leggings.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-            ItemStack boots = new ItemStack(Material.IRON_BOOTS, 1);
-            boots.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-            inv.setChestplate(chest);
-            inv.setLeggings(leggings);
-            inv.setBoots(boots);
+        } else if (kit==Kit.JUGGERNAUT) { //Done
+            inv.setChestplate(new ItemStack(Material.DIAMOND_CHESTPLATE, 1));
+            inv.setLeggings(new ItemStack(Material.DIAMOND_LEGGINGS, 1));
+            inv.setBoots(new ItemStack(Material.DIAMOND_BOOTS, 1));
             inv.addItem(new ItemStack(Material.STONE_SWORD, 1));
             p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 999999999, 1));
             ItemStack fuse = new ItemStack(Material.BLAZE_POWDER, 1);
@@ -132,7 +126,7 @@ public class KitManager {
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
             inv.setItem(8, fuse);
-        } else if (kit==Kit.SPY) {
+        /*} else if (kit==Kit.SPY) {
             ItemStack sword = new ItemStack(Material.GOLD_SWORD, 1);
             sword.addEnchantment(Enchantment.FIRE_ASPECT, 2);
             sword.addEnchantment(Enchantment.DURABILITY, 3);
@@ -144,25 +138,24 @@ public class KitManager {
             fusemeta.setDisplayName("§5Fuse");
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
-            inv.setItem(8, fuse);
-        } else if (kit==Kit.SNIPER) {
+            inv.setItem(8, fuse);*/
+        } else if (kit==Kit.SNIPER) { //Done
             ItemStack bow = new ItemStack(Material.BOW, 1);
-            bow.addEnchantment(Enchantment.ARROW_DAMAGE, 2);
+            bow.addEnchantment(Enchantment.ARROW_DAMAGE, 1);
             bow.addEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
-            bow.addEnchantment(Enchantment.ARROW_INFINITE, 1);
             inv.setChestplate(new ItemStack(Material.IRON_CHESTPLATE, 1));
             inv.setLeggings(new ItemStack(Material.IRON_LEGGINGS, 1));
             inv.setBoots(new ItemStack(Material.IRON_BOOTS, 1));
             inv.addItem(new ItemStack(Material.WOOD_SWORD, 1));
             inv.addItem(bow);
-            inv.addItem(new ItemStack(Material.ARROW, 1));
+            inv.addItem(new ItemStack(Material.ARROW, 32));
             ItemStack fuse = new ItemStack(Material.BLAZE_POWDER, 1);
             ItemMeta fusemeta = fuse.getItemMeta();
             fusemeta.setDisplayName("§5Fuse");
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
             inv.setItem(8, fuse);
-        } else if (kit==Kit.SCOUT) {
+        } else if (kit==Kit.SCOUT) { //Done
             ItemStack chest = new ItemStack(Material.GOLD_CHESTPLATE, 1);
             chest.addEnchantment(Enchantment.DURABILITY, 3);
             ItemStack leggings = new ItemStack(Material.GOLD_LEGGINGS, 1);
@@ -181,16 +174,15 @@ public class KitManager {
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
             inv.setItem(8, fuse);
-        } else if (kit==Kit.EXPLOSIVE) {
-            ItemStack sword = new ItemStack(Material.STONE_SWORD, 1);
-            sword.addEnchantment(Enchantment.DAMAGE_ALL, 1);
+        } else if (kit==Kit.EXPLOSIVE) { //Done
+            ItemStack sword = new ItemStack(Material.IRON_SWORD, 1);
             ItemStack grenades = new ItemStack(Material.SNOW_BALL, 6);
             ItemMeta grenademeta = grenades.getItemMeta();
             grenademeta.setDisplayName("Grenade");
             grenades.setItemMeta(grenademeta);
             ItemStack plates = new ItemStack(Material.STONE_PLATE, 2);
             ItemMeta platemeta = plates.getItemMeta();
-            platemeta.setDisplayName("Death plates");
+            platemeta.setDisplayName("Land mines");
             plates.setItemMeta(platemeta);
             ItemStack chest = new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1);
             chest.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1);
@@ -210,7 +202,7 @@ public class KitManager {
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
             inv.setItem(8, fuse);
-        } else if (kit==Kit.WIZARD) {
+        } else if (kit==Kit.WIZARD) { //Done
             ItemStack chest = new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1);
             chest.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1);
             ItemStack leggings = new ItemStack(Material.CHAINMAIL_LEGGINGS, 1);
@@ -222,8 +214,7 @@ public class KitManager {
             staffmeta.setDisplayName("Staff");
             staffmeta.setLore(Arrays.asList("Left click to shoot fireballs!"));
             staff.setItemMeta(staffmeta);
-            ItemStack sword = new ItemStack(Material.STONE_SWORD, 1);
-            sword.addEnchantment(Enchantment.DAMAGE_ALL, 1);
+            ItemStack sword = new ItemStack(Material.IRON_SWORD, 1);
             inv.setChestplate(chest);
             inv.setLeggings(leggings);
             inv.setBoots(boots);
@@ -235,9 +226,69 @@ public class KitManager {
             fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
             fuse.setItemMeta(fusemeta);
             inv.setItem(8, fuse);
+        } else if (kit==Kit.BANTER) {
+            /**
+             *  Kit: Banter
+             Cost: 50
+             Armour: Leather Helmet, Chain Plate, Leather Leggings, Leather Boots
+             Weapon: Wood Sword (Sharpness 2, Knockback 5)
+             Other Items: Fuse
+
+             Kit: Ghost
+             Cost: 200
+             Armour: None
+             Weapon: Gold Sword (Sharpness 2)
+             Other Items: x3 Enderpearls, Fuse
+
+             Kit: Assassin
+             Cost: 400
+             Armour: Chain Helmet, Iron Plate, Chain Leggings, Iron Boots
+             Weapon: Iron Sword (Poison 2)
+             Other Items: Fuse
+             */
+            ItemStack sword = new ItemStack(Material.WOOD_SWORD, 1);
+            sword.addEnchantment(Enchantment.DAMAGE_ALL, 2);
+            sword.addEnchantment(Enchantment.KNOCKBACK, 2);
+            inv.setChestplate(new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1));
+            inv.setLeggings(new ItemStack(Material.LEATHER_LEGGINGS, 1));
+            inv.setBoots(new ItemStack(Material.LEATHER_BOOTS, 1));
+            inv.addItem(sword);
+            ItemStack fuse = new ItemStack(Material.BLAZE_POWDER, 1);
+            ItemMeta fusemeta = fuse.getItemMeta();
+            fusemeta.setDisplayName("§5Fuse");
+            fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
+            fuse.setItemMeta(fusemeta);
+            inv.setItem(8, fuse);
+        } else if (kit==Kit.GHOST) {
+            ItemStack sword = new ItemStack(Material.GOLD_SWORD, 1);
+            sword.addEnchantment(Enchantment.DAMAGE_ALL, 2);
+            inv.addItem(sword);
+            inv.addItem(new ItemStack(Material.ENDER_PEARL, 3));
+            p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 999999999, 1));
+            ItemStack fuse = new ItemStack(Material.BLAZE_POWDER, 1);
+            ItemMeta fusemeta = fuse.getItemMeta();
+            fusemeta.setDisplayName("§5Fuse");
+            fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
+            fuse.setItemMeta(fusemeta);
+            inv.setItem(8, fuse);
+        } else if (kit==Kit.ASSASSIN) {
+            ItemStack sword = new ItemStack(Material.IRON_SWORD, 1);
+            ItemMeta meta = sword.getItemMeta();
+            meta.setDisplayName("Poison Sword");
+            sword.setItemMeta(meta);
+            inv.setChestplate(new ItemStack(Material.IRON_CHESTPLATE, 1));
+            inv.setLeggings(new ItemStack(Material.CHAINMAIL_LEGGINGS, 1));
+            inv.setBoots(new ItemStack(Material.IRON_BOOTS, 1));
+            inv.addItem(sword);
+            ItemStack fuse = new ItemStack(Material.BLAZE_POWDER, 1);
+            ItemMeta fusemeta = fuse.getItemMeta();
+            fusemeta.setDisplayName("§5Fuse");
+            fusemeta.setLore(Arrays.asList("Use this to light the", "other team's bomb!"));
+            fuse.setItemMeta(fusemeta);
+            inv.setItem(8, fuse);
         }
 
-        if (kit!=Kit.SPY) {
+        if (kit!=Kit.GHOST) {
             if (team==Team.RED) {
                 ItemStack red = new ItemStack(Material.WOOL, 1, DyeColor.RED.getData());
                 inv.setHelmet(red);

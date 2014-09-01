@@ -213,7 +213,6 @@ public class GameManager {
         SND.lh.getRedBombSpawn().getBlock().setType(Material.AIR);
         SND.lh.getBlueBombSpawn().getBlock().setType(Material.AIR);
         SND.gm.setGameState(GameState.LOBBY);
-        SND.gm.updateJoinSign();
         SND.gm.setEnded(false);
         plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
             @Override

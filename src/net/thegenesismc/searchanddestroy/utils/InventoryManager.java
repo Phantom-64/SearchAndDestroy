@@ -59,6 +59,18 @@ public class InventoryManager {
         p.openInventory(inv);
     }
 
+    /**
+     * Assault-
+     Sniper-
+     Banter-
+     Ghost-
+     Scout-
+     Juggernaut-
+     Assassin-
+     Explosive-
+     Wizard-
+     */
+
     public void openKitSelector(Player p) {
         Inventory inv = Bukkit.createInventory(null, 18, "§4SND §aKit Selector");
         ItemStack assault = new ItemStack(Material.IRON_SWORD, 1);
@@ -67,12 +79,12 @@ public class InventoryManager {
         assault.setItemMeta(assaultmeta);
         ItemStack jugger = new ItemStack(Material.STONE_SWORD, 1);
         ItemMeta juggermeta = jugger.getItemMeta();
-        juggermeta.setDisplayName("§aJuggernaut Kit");
+        juggermeta.setDisplayName("§bJuggernaut Kit");
         jugger.setItemMeta(juggermeta);
-        ItemStack spy = new ItemStack(Material.ENDER_PEARL, 1);
-        ItemMeta spymeta = spy.getItemMeta();
-        spymeta.setDisplayName("§aSpy Kit");
-        spy.setItemMeta(spymeta);
+        ItemStack ghost = new ItemStack(Material.ENDER_PEARL, 1);
+        ItemMeta ghostmeta = ghost.getItemMeta();
+        ghostmeta.setDisplayName("§aGhost Kit");
+        ghost.setItemMeta(ghostmeta);
         ItemStack sniper = new ItemStack(Material.BOW, 1);
         ItemMeta snipermeta = sniper.getItemMeta();
         snipermeta.setDisplayName("§aSniper Kit");
@@ -83,19 +95,29 @@ public class InventoryManager {
         scout.setItemMeta(scoutmeta);
         ItemStack explosive = new ItemStack(Material.TNT, 1);
         ItemMeta explosivemeta = explosive.getItemMeta();
-        explosivemeta.setDisplayName("§aExplosive Kit");
+        explosivemeta.setDisplayName("§bExplosive Kit");
         explosive.setItemMeta(explosivemeta);
         ItemStack wizard = new ItemStack(Material.BLAZE_ROD, 1);
         ItemMeta wizardmeta = wizard.getItemMeta();
-        wizardmeta.setDisplayName("§aWizard Kit");
+        wizardmeta.setDisplayName("§bWizard Kit");
         wizard.setItemMeta(wizardmeta);
+        ItemStack banter = new ItemStack(Material.WOOD_SWORD, 1);
+        ItemMeta bantermeta = banter.getItemMeta();
+        bantermeta.setDisplayName("§aBanter Kit");
+        banter.setItemMeta(bantermeta);
+        ItemStack ass = new ItemStack(Material.IRON_CHESTPLATE, 1);
+        ItemMeta assmeta = ass.getItemMeta();
+        assmeta.setDisplayName("§bAssassin Kit");
+        ass.setItemMeta(assmeta);
         inv.setItem(0, assault);
-        inv.setItem(1, jugger);
-        inv.setItem(2, spy);
-        inv.setItem(3, sniper);
+        inv.setItem(1, sniper);
+        inv.setItem(2, banter);
+        inv.setItem(3, ghost);
         inv.setItem(4, scout);
-        inv.setItem(9, explosive);
-        inv.setItem(10, wizard);
+        inv.setItem(9, jugger);
+        inv.setItem(10, ass);
+        inv.setItem(11, explosive);
+        inv.setItem(12, wizard);
         p.openInventory(inv);
     }
 

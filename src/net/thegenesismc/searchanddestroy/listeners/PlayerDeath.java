@@ -26,7 +26,6 @@ public class PlayerDeath implements Listener {
             p.setFoodLevel(20);
             SND.gm.removePlayerFromGame(p);
             SND.sm.setSpectator(p);
-            SND.gm.updateJoinSign();
         }
     }
 

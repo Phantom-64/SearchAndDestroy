@@ -22,6 +22,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -318,7 +319,7 @@ public class SND extends JavaPlugin implements Listener {
 				creditsRes.next();
 				
 				
-				previousWins = winRes.getInt("wins");
+				previousWins = winsRes.getInt("wins");
 				previousLoses = losesRes.getInt("loses");
 				previousKills = killsRes.getInt("kills");
 				previousDeaths = deathsRes.getInt("deaths");
@@ -393,7 +394,6 @@ public class SND extends JavaPlugin implements Listener {
                                 p.sendMessage(SND.TAG_RED + "This game is full.");
                             } else if (SND.lm.getLobby().size()<SND.gm.getPlayerLimit()) {
                                 SND.lm.addPlayerToLobby(p);
-                                SND.gm.updateJoinSign();
                                 SND.lm.broadcastMessageInLobby(SND.TAG_GREEN + p.getName() + " joined the lobby. §2(§a" + SND.lm.getLobby().size() + "§2/§a" + SND.gm.getPlayerLimit() + "§2)");
                                 if (SND.lm.getLobby().size()==1) {
                                     timer = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
@@ -428,7 +428,6 @@ public class SND extends JavaPlugin implements Listener {
                                                         SND.lh.getRedBombSpawn().getBlock().setType(Material.TNT);
                                                         SND.lh.getBlueBombSpawn().getBlock().setType(Material.TNT);
                                                         SND.gm.setGameState(GameState.INGAME);
-                                                        SND.gm.updateJoinSign();
                                                         num--;
                                                     } else if (SND.lm.getLobby().size()<SND.lm.getMinPlayersToStart()) {
                                                         SND.lm.broadcastMessageInLobby(SND.TAG_RED + "There weren't enough players to start. Restarting timer...");
@@ -1088,9 +1087,9 @@ public class SND extends JavaPlugin implements Listener {
                                     public void run() {
                                         canFireBall.put(p, true);
                                     }
-                                }, 20 * 10);
+                                }, 20 * 5);
                             } else {
-                                p.sendMessage(SND.TAG_BLUE + "Please wait 10 seconds before using this again.");
+                                p.sendMessage(SND.TAG_BLUE + "Please wait 5 seconds before using this again.");
                             }
                         } else {
                             e.setCancelled(true);
@@ -1102,7 +1101,7 @@ public class SND extends JavaPlugin implements Listener {
                                 public void run() {
                                     canFireBall.put(p, true);
                                 }
-                            }, 20 * 10);
+                            }, 20 * 5);
                         }
                     }
                 }
@@ -1255,7 +1254,6 @@ public class SND extends JavaPlugin implements Listener {
             }
             SND.gm.removePlayerFromGame(p);
             SND.sm.setSpectator(p);
-            SND.gm.updateJoinSign();
             if (SND.tm.getBlue().size()==0) {
                 SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "Everyone in §9blue team §ais dead!", true);
                 SND.gm.broadcastMessageInGame(SND.TAG_GREEN + "§cRed team §awins!", true);
@@ -1528,6 +1526,21 @@ public class SND extends JavaPlugin implements Listener {
         }
     }
 
+    @EventHandler
+    public void onPoisonSword(EntityDamageByEntityEvent e) {
+        if (e.getEntity() instanceof Player) {
+            Player p =  (Player) e.getEntity();
+            if (e.getDamager() instanceof Player) {
+                Player damager = (Player) e.getDamager();
+                if (SND.gm.isPlaying(p)&&SND.gm.isPlaying(damager)) {
+                    if (damager.getItemInHand().getItemMeta().getDisplayName().equals("Poison Sword")) {
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 2, 2));
+                    }
+                }
+            }
+        }
+    }
+
     public static void shootFirework(Location loc) {
         Firework fw = (Firework) loc.getWorld().spawnEntity(loc, EntityType.FIREWORK);
         FireworkMeta fwm = fw.getFireworkMeta();
@@ -1619,7 +1632,6 @@ public class SND extends JavaPlugin implements Listener {
                 p.sendMessage(SND.TAG_RED + "This game is full.");
             } else if (SND.lm.getLobby().size()<SND.gm.getPlayerLimit()) {
                 SND.lm.addPlayerToLobby(p);
-                SND.gm.updateJoinSign();
                 SND.lm.broadcastMessageInLobby(SND.TAG_GREEN + p.getName() + " joined the lobby. §2(§a" + SND.lm.getLobby().size() + "§2/§a" + SND.gm.getPlayerLimit() + "§2)");
                 if (SND.lm.getLobby().size()==1) {
                     timer = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
@@ -1658,7 +1670,6 @@ public class SND extends JavaPlugin implements Listener {
                                         SND.lh.getRedBombSpawn().getBlock().setType(Material.TNT);
                                         SND.lh.getBlueBombSpawn().getBlock().setType(Material.TNT);
                                         SND.gm.setGameState(GameState.INGAME);
-                                        SND.gm.updateJoinSign();
                                         num--;
                                     } else if (SND.lm.getLobby().size()<SND.lm.getMinPlayersToStart()) {
                                         SND.lm.broadcastMessageInLobby(SND.TAG_RED + "There weren't enough players to start. Restarting timer...");

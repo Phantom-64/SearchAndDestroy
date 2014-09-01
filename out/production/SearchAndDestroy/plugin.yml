@@ -1,0 +1,17 @@
+name: SND
+main: net.thegenesismc.searchanddestroy.SND
+version: 1.0
+description: SND plugin.
+author: Phantom_64
+
+commands:
+   snd:
+     description: Main command for SND plugin.
+   stats:
+     description: Shows your SnD stats.
+   p:
+     description: Get those potion effects outta here.
+
+permissions:
+    snd.donator:
+      default: op

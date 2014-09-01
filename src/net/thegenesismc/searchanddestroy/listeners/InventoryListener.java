@@ -10,13 +10,15 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 /**
- * ASSAULT,
- JUGGERNAUT,
- SPY,
- SNIPER,
- SCOUT,
- EXPLOSIVE,
- WIZARD;
+ * Assault-
+ Sniper-
+ Banter
+ Ghost-
+ Scout-
+ Juggernaut-
+ Assassin
+ Explosive-
+ Wizard-
  */
 
 public class InventoryListener implements Listener {
@@ -34,16 +36,22 @@ public class InventoryListener implements Listener {
                     e.setCancelled(true);
                     p.closeInventory();
                     SND.km.setKit(p, Kit.ASSAULT, SND.tm.getTeam(p));
-                } else if (name.equals("§aJuggernaut Kit")&&m==Material.STONE_SWORD) {
+                } else if (name.equals("§bJuggernaut Kit")&&m==Material.STONE_SWORD) {
+                    if (p.hasPermission("snd.donator")) {
+                        p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
+                        e.setCancelled(true);
+                        p.closeInventory();
+                        SND.km.setKit(p, Kit.JUGGERNAUT, SND.tm.getTeam(p));
+                    } else {
+                        e.setCancelled(true);
+                        p.closeInventory();
+                        p.sendMessage(SND.TAG_RED + "You don't have permission for this kit!");
+                    }
+                } else if (name.equals("§aGhost Kit")&&m==Material.ENDER_PEARL) {
                     p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
                     e.setCancelled(true);
                     p.closeInventory();
-                    SND.km.setKit(p, Kit.JUGGERNAUT, SND.tm.getTeam(p));
-                } else if (name.equals("§aSpy Kit")&&m==Material.ENDER_PEARL) {
-                    p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
-                    e.setCancelled(true);
-                    p.closeInventory();
-                    SND.km.setKit(p, Kit.SPY, SND.tm.getTeam(p));
+                    SND.km.setKit(p, Kit.GHOST, SND.tm.getTeam(p));
                 } else if (name.equals("§aSniper Kit")&&m==Material.BOW) {
                     p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
                     e.setCancelled(true);
@@ -54,7 +62,7 @@ public class InventoryListener implements Listener {
                     e.setCancelled(true);
                     p.closeInventory();
                     SND.km.setKit(p, Kit.SCOUT, SND.tm.getTeam(p));
-                } else if (name.equals("§aExplosive Kit")&&m==Material.TNT) {
+                } else if (name.equals("§bExplosive Kit")&&m==Material.TNT) {
                     if (p.hasPermission("snd.donator")) {
                         p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
                         e.setCancelled(true);
@@ -65,7 +73,7 @@ public class InventoryListener implements Listener {
                         p.closeInventory();
                         p.sendMessage(SND.TAG_RED + "You don't have permission for this kit!");
                     }
-            } else if (name.equals("§aWizard Kit")&&m==Material.BLAZE_ROD) {
+                } else if (name.equals("§bWizard Kit")&&m==Material.BLAZE_ROD) {
                     if (p.hasPermission("snd.donator")) {
                         p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
                         e.setCancelled(true);
@@ -76,8 +84,35 @@ public class InventoryListener implements Listener {
                         p.closeInventory();
                         p.sendMessage(SND.TAG_RED + "You don't have permission for this kit!");
                     }
+                } else if (name.equals("§aBanter Kit")&&m==Material.WOOD_SWORD) {
+                    p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
+                    e.setCancelled(true);
+                    p.closeInventory();
+                    SND.km.setKit(p, Kit.BANTER, SND.tm.getTeam(p));
+                } else if (name.equals("§bAssassin Kit")&&m==Material.IRON_CHESTPLATE) {
+                    if (p.hasPermission("snd.donator")) {
+                        p.getInventory().remove(new ItemStack(Material.NETHER_STAR, 1));
+                        e.setCancelled(true);
+                        p.closeInventory();
+                        SND.km.setKit(p, Kit.ASSASSIN, SND.tm.getTeam(p));
+                    } else {
+                        e.setCancelled(true);
+                        p.closeInventory();
+                        p.sendMessage(SND.TAG_RED + "You don't have permission for this kit!");
+                    }
                 }
             } catch (NullPointerException npe) {}
+            /**
+             * Assault-
+             Sniper-
+             Banter
+             Ghost-
+             Scout-
+             Juggernaut-
+             Assassin
+             Explosive-
+             Wizard-
+             */
         }
     }
 }

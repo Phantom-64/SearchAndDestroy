@@ -22,7 +22,6 @@ public class CommandLeave {
                 if (SND.gm.getPlaying().size()==0) {
                     SND.gm.setGameState(GameState.LOBBY);
                 }
-                SND.gm.updateJoinSign();
             } else if (SND.lm.isInLobby(p)) {
                 SND.lm.broadcastMessageInLobby(SND.TAG_RED + p.getName() + " left the lobby.");
                 for (PotionEffect effect : p.getActivePotionEffects()) {
@@ -37,7 +36,6 @@ public class CommandLeave {
                 }
                 SND.lm.removePlayerFromLobby(p);
                 p.teleport(SND.lh.getExitSpawn());
-                SND.gm.updateJoinSign();
             } else if (SND.sm.isSpectator(p)) {
                 SND.gm.broadcastMessageInGame(SND.TAG_RED + p.getName() + " stopped spectating.", true);
                 for (PotionEffect effect : p.getActivePotionEffects()) {
@@ -48,7 +46,6 @@ public class CommandLeave {
                 if (SND.gm.getPlaying().size()==0) {
                     SND.gm.setGameState(GameState.LOBBY);
                 }
-                SND.gm.updateJoinSign();
             } else {
                 p.sendMessage(SND.TAG_BLUE + "You are not in a game!");
             }
