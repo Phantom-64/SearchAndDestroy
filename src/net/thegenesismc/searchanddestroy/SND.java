@@ -142,7 +142,6 @@ public class SND extends JavaPlugin implements Listener {
         cm = new CreditManager(this);
         tm.setupTeams();
         gm.setGameState(GameState.LOBBY);
-        SND.gm.updateJoinSign();
         SND.gm.setEnded(false);
     }
 
@@ -178,7 +177,6 @@ public class SND extends JavaPlugin implements Listener {
         SND.lh.getRedBombSpawn().getBlock().setType(Material.AIR);
         SND.lh.getBlueBombSpawn().getBlock().setType(Material.AIR);
         SND.gm.setGameState(GameState.LOBBY);
-        SND.gm.updateJoinSign();
         SND.gm.setEnded(false);
         
         /*
