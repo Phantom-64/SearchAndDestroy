@@ -128,10 +128,11 @@ public class SND extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+        getConfig().set("PlayerLimit", 24);
         getConfig().options().copyDefaults(true);
         saveConfig();
         registerListeners(this, new SignListener(), new InventoryListener(), new BlockListener(),
-                new FoodLevelListener(), new NoDropListener(), new PlayerQuit(), new PlayerChat());
+                new FoodLevelListener(), new NoDropListener(), new PlayerQuit(), new PlayerChat(), new PlayerLogin());
         lh = new LocationHandler(this);
         tm = new TeamManager(this);
         km = new KitManager(this);
@@ -1241,12 +1242,13 @@ public class SND extends JavaPlugin implements Listener {
             e.getDrops().clear();
             if (p.getKiller() instanceof Player) {
                 Player killer = p.getKiller();
+                killer.getWorld().playSound(p.getLocation(), Sound.EXPLODE, 1, 1);
                 SND.gm.broadcastMessageInGame(SND.TAG_BLUE + SND.tm.getPlayerNameInTeamColor(p) + " §9was killed by " + SND.tm.getPlayerNameInTeamColor(killer) + "§9.", true);
+                SND.cm.giveCredits(killer, 10);
             } else {
                 SND.gm.broadcastMessageInGame(SND.TAG_BLUE + SND.tm.getPlayerNameInTeamColor(p) + " §9died.", true);
             }
             e.setDeathMessage("");
-            p.getWorld().playSound(p.getLocation(), Sound.EXPLODE, 1, 1);
             p.setHealth(20.0);
             p.setFoodLevel(20);
             for (PotionEffect effect : p.getActivePotionEffects()) {

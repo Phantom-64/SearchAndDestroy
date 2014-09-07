@@ -4,16 +4,17 @@ import net.thegenesismc.searchanddestroy.SND;
 import net.thegenesismc.searchanddestroy.utils.LocationHandler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 
-public class PlayerJoin implements Listener {
+public class PlayerLogin implements Listener {
 
     @EventHandler
-    public void onJoin(PlayerJoinEvent e) {
+    public void onLogin(PlayerLoginEvent e) {
         LocationHandler lh = SND.lh;
-        if (e.getPlayer().isOp()) {
+        if (!e.getPlayer().isOp()) {
             if (lh.getRedBombSpawn()==null||lh.getBlueBombSpawn()==null||lh.getRedSpawn()==null||lh.getBlueSpawn()==null||lh.getExitSpawn()==null) {
-                e.getPlayer().sendMessage(SND.TAG_BLUE + "All the spawns are not set.");
+                e.setResult(PlayerLoginEvent.Result.KICK_OTHER);
+                e.setKickMessage("   " + SND.TAG_RED + "\n" + "§cThe game has not been set up!");
             }
         }
     }

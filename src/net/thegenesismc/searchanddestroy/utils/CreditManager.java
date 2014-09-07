@@ -12,21 +12,16 @@ public class CreditManager {
     }
 
     public void giveCredits(Player p, int credits) {
-        if (plugin.getConfig().contains("Credits." + p.getName())) {
-            plugin.getConfig().set("Credits." + p.getName(), plugin.getConfig().getInt("Credits." + p.getName()) + credits);
-        } else {
-            plugin.getConfig().set("Credits." + p.getName(), credits);
-        }
+        //Used to give credits
+        p.sendMessage(SND.TAG_GREEN + "You earned §7[" + "§b" + credits + "§7] §acredits!");
     }
 
     public void setCredits(Player p, int credits) {
-        plugin.getConfig().set("Credits." + p.getName(), credits);
+        //Mostly used to reset credits (set them to 0)
     }
 
     public int getCredits(Player p) {
-        if (plugin.getConfig().contains("Credits." + p.getName())) {
-            return plugin.getConfig().getInt("Credits." + p.getName());
-        }
+        //Getter for credits
         return 0;
     }
 }
