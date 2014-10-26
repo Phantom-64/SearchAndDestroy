@@ -99,10 +99,7 @@ import java.util.*;
 
 /**
  * TO-DO
- * - Fuse and defuse logic
- * - Spectator shiz
- *   - Let people join when game state is in game and set them to spectator
- *   - Block all interactions with the environment
+ * - Credits
  */
 public class SND extends JavaPlugin implements Listener {
 
@@ -128,7 +125,6 @@ public class SND extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        getConfig().set("PlayerLimit", 24);
         getConfig().options().copyDefaults(true);
         saveConfig();
         registerListeners(this, new SignListener(), new InventoryListener(), new BlockListener(),
@@ -333,6 +329,7 @@ public class SND extends JavaPlugin implements Listener {
 				p.sendMessage(ChatColor.BLUE + "Kills" + ChatColor.AQUA + " *" + ChatColor.DARK_AQUA + "» " + ChatColor.YELLOW + previousKills);
 				p.sendMessage(ChatColor.BLUE + "Deaths" + ChatColor.AQUA + " *" + ChatColor.DARK_AQUA + "» " + ChatColor.YELLOW + previousDeaths);
 				p.sendMessage(ChatColor.BLUE + "Credits" + ChatColor.AQUA + " *" + ChatColor.DARK_AQUA + "» " + ChatColor.YELLOW + previousCredits);
+                p.sendMessage(ChatColor.GRAY + "" + ChatColor.STRIKETHROUGH + "-------------------------------------------------");
 				p.sendMessage(" ");
 				
 				// Dont Change the p.sendMessage 's please
@@ -1535,8 +1532,12 @@ public class SND extends JavaPlugin implements Listener {
             if (e.getDamager() instanceof Player) {
                 Player damager = (Player) e.getDamager();
                 if (SND.gm.isPlaying(p)&&SND.gm.isPlaying(damager)) {
-                    if (damager.getItemInHand().getItemMeta().getDisplayName().equals("Poison Sword")) {
-                        p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 2, 2));
+                    if (damager.getItemInHand().getType()!=Material.AIR) {
+                        if (damager.getItemInHand().getType()==Material.IRON_SWORD) {
+                            if (damager.getItemInHand().getItemMeta().getDisplayName().equals("Poison Sword")) {
+                                p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 2, 2));
+                            }
+                        }
                     }
                 }
             }
