@@ -1168,76 +1168,71 @@ public class SND extends JavaPlugin implements Listener {
 		} finally {
 		closeConnection();
 		}
-		
-		
-		
-		
-		
-		
-		// Death SQL
-		
-		openConnection();
-		try {
-			String uuid = "" + p.getKiller().getUniqueId();
-			int previousDeaths = 0;
-		 int previousCreds = 0;
-			
-			if (playerDataContainsPlayer(uuid)) {
-				PreparedStatement sql = connection.prepareStatement("SELECT deaths FROM `snd` WHERE player=?;");
-				sql.setString(1, uuid);
-				
-				PreparedStatement credSQL = connection.prepareStatement("SELECT credits FROM `snd` WHERE player=?;");
-				sql.setString(1, uuid);
-				
-				ResultSet result = sql.executeQuery();
-				result.next();
-				
-				ResultSet credRes = credSQL.executeQuery();
-				credRes.next();
-				
-				
-				previousDeaths = result.getInt("deaths");				
-				previousCreds = result.getInt("credits");
-				
-				PreparedStatement deathsUpdate = connection.prepareStatement("UPDATE `snd` set death=? WHERE player=?;"); 
-								deathsUpdate.setInt(1, previousDeaths + 1);
-								deathsUpdate.setString(2, uuid);
-								deathsUpdate.executeUpdate();
-				
-				PreparedStatement credUpdate = connection.prepareStatement("UPDATE `snd` set credits=? WHERE player=?;"); 
-								credUpdate.setInt(1, previousCreds + 10);
-								credUpdate.setString(2, uuid);
-								credUpdate.executeUpdate();
-								
-								
-				
-				deathsUpdate.close();
-				credUpdate.close();
-				sql.close();
-				result.close();
-				
-			} else {
-				PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
-				newPlayer.setString(1, uuid);
-				newPlayer.execute();
-				newPlayer.close();
-				
-			}
-			
-		}catch(Exception exc) {
-			exc.printStackTrace();
-		} finally {
-		closeConnection();
-		}
-        
-        
-        
         
         //------------------
         
         if (SND.gm.isPlaying(p)) {
             e.getDrops().clear();
             if (p.getKiller() instanceof Player) {
+
+                // Death SQL
+
+                openConnection();
+                try {
+                    String uuid = "" + p.getKiller().getUniqueId();
+                    int previousDeaths = 0;
+                    int previousCreds = 0;
+
+                    if (playerDataContainsPlayer(uuid)) {
+                        PreparedStatement sql = connection.prepareStatement("SELECT deaths FROM `snd` WHERE player=?;");
+                        sql.setString(1, uuid);
+
+                        PreparedStatement credSQL = connection.prepareStatement("SELECT credits FROM `snd` WHERE player=?;");
+                        sql.setString(1, uuid);
+
+                        ResultSet result = sql.executeQuery();
+                        result.next();
+
+                        ResultSet credRes = credSQL.executeQuery();
+                        credRes.next();
+
+
+                        previousDeaths = result.getInt("deaths");
+                        previousCreds = result.getInt("credits");
+
+                        PreparedStatement deathsUpdate = connection.prepareStatement("UPDATE `snd` set death=? WHERE player=?;");
+                        deathsUpdate.setInt(1, previousDeaths + 1);
+                        deathsUpdate.setString(2, uuid);
+                        deathsUpdate.executeUpdate();
+
+                        PreparedStatement credUpdate = connection.prepareStatement("UPDATE `snd` set credits=? WHERE player=?;");
+                        credUpdate.setInt(1, previousCreds + 10);
+                        credUpdate.setString(2, uuid);
+                        credUpdate.executeUpdate();
+
+
+
+                        deathsUpdate.close();
+                        credUpdate.close();
+                        sql.close();
+                        result.close();
+
+                    } else {
+                        PreparedStatement newPlayer = connection.prepareStatement("INSERT INTO `snd` values(?,0,0,0,0,0);");
+                        newPlayer.setString(1, uuid);
+                        newPlayer.execute();
+                        newPlayer.close();
+
+                    }
+
+                }catch(Exception exc) {
+                    exc.printStackTrace();
+                } finally {
+                    closeConnection();
+                }
+
+                //---------------
+
                 Player killer = p.getKiller();
                 killer.getWorld().playSound(p.getLocation(), Sound.EXPLODE, 1, 1);
                 SND.gm.broadcastMessageInGame(SND.TAG_BLUE + SND.tm.getPlayerNameInTeamColor(p) + " §9was killed by " + SND.tm.getPlayerNameInTeamColor(killer) + "§9.", true);
